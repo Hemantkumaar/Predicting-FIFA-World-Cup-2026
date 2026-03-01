@@ -286,6 +286,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     };
     document.body.addEventListener('click',enableAudio,{once:true});
     document.body.addEventListener('touchstart',enableAudio,{once:true});
+    setTimeout(()=>render(),100);
 });/* ---------------- CONFETTI CONTROL ---------------- */
 let confettiAnimation;
 let confettiActive = false;

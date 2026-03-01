@@ -226,7 +226,73 @@ z-index:10000;
 
 <script>
 
-/* ---------------- CONFETTI CONTROL ---------------- */
+/* -------- GLOBAL SOUNDTRACK CONTROLS -------- */
+function initGlobalSong(){
+  const song=document.getElementById('globalSong');
+  const btn=document.getElementById('playPauseBtn');
+  if(!song) return;
+  song.volume=1;
+  const t=parseFloat(sessionStorage.getItem('audioTime')||localStorage.getItem('songTime')||0);
+  const wasPlaying=sessionStorage.getItem('audioPlaying')==='true'||localStorage.getItem('songPlaying')==='true';
+  if(!isNaN(t) && t>0) song.currentTime=t;
+  console.log('🎵 Fifa Sim: restored time='+t.toFixed(1)+'s, wasPlaying='+wasPlaying);
+  
+  const updateProgress=()=>{
+    const bar=document.getElementById('progressBar');
+    if(bar && song.duration) bar.style.width=((song.currentTime/song.duration)*100)+'%';
+  };
+  
+  setInterval(()=>{
+    sessionStorage.setItem('audioTime',song.currentTime);
+    localStorage.setItem('songTime',song.currentTime);
+    updateProgress();
+  },500);
+  
+  song.addEventListener('play',()=>{
+    sessionStorage.setItem('audioPlaying','true');
+    localStorage.setItem('songPlaying','true');
+    if(btn) btn.textContent='⏸';
+    console.log('▶ Audio playing');
+  });
+  
+  song.addEventListener('pause',()=>{
+    sessionStorage.setItem('audioPlaying','false');
+    localStorage.setItem('songPlaying','false');
+    if(btn) btn.textContent='▶';
+    console.log('⏸ Audio paused');
+  });
+  
+  if(btn) btn.textContent=wasPlaying?'⏸':'▶';
+  
+  if(wasPlaying){
+    song.play().then(()=>{
+      console.log('✓ Auto-resumed');
+      if(btn) btn.textContent='⏸';
+    }).catch(err=>{
+      console.log('⚠ Autoplay blocked, waiting for click...');
+      if(btn) btn.textContent='▶';
+    });
+  }
+}
+
+function togglePlayPause(){
+  const song=document.getElementById('globalSong');
+  if(song.paused) song.play().catch(err=>console.warn('Play failed:',err.message));
+  else song.pause();
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+    initGlobalSong();
+    const enableAudio=()=>{
+        const s=document.getElementById('globalSong');
+        if(s && s.paused) s.play().catch(()=>{});
+    };
+    document.body.addEventListener('click',enableAudio,{once:true});
+    document.body.addEventListener('touchstart',enableAudio,{once:true});
+    setTimeout(()=>render(),100);
+});
+
+/* -------- CONFETTI CONTROL -------- */
 let confettiAnimation;
 let confettiActive = false;
 
