@@ -115,14 +115,12 @@ cursor:pointer;
 <!-- persistent soundtrack for tournament flow; local file -->
 <audio id="globalSong" src="champion.mp3" preload="auto"></audio>
 
-<!-- persistent soundtrack for entire flow -->
-<audio id="globalSong" src="champion.mp3" preload="auto"></audio>
-
-<!-- champion song placeholder; supply a file named 'champion.mp3' or adjust path -->
-<audio id="championSong" src="champion.mp3" preload="auto"></audio>
-
-<!-- champion song placeholder; supply a file such as 'champion.mp3' or adjust path.
-	Recommended track: "Waka Waka (This Time for Africa)" by Shakira. -->
+<!-- Global Audio Player UI -->
+<div style="position:fixed;bottom:20px;right:20px;z-index:9999;background:rgba(0,0,0,.95);padding:10px 12px;border-radius:8px;border:2px solid #f6c453;display:flex;align-items:center;gap:8px;font-size:11px;box-shadow:0 4px 20px rgba(0,0,0,.8);font-family:system-ui;">
+  <button id="playPauseBtn" style="background:#f6c453;color:#000;border:none;padding:5px 8px;border-radius:4px;cursor:pointer;font-weight:bold;font-size:12px;line-height:1;" onclick="togglePlayPause()">▶</button>
+  <span style="color:#a9b4d0;font-size:10px;">🎵 Waka Waka</span>
+  <div style="width:80px;height:2px;background:rgba(255,255,255,.2);border-radius:1px;overflow:hidden;"><div id="progressBar" style="height:100%;background:#f6c453;width:0%;"></div></div>
+</div>
 
 <div class="container">
 <h1>🏆 FIFA 2026 FINAL</h1>
@@ -139,22 +137,48 @@ cursor:pointer;
 <script>
 
 function initGlobalSong(){
-    const song=document.getElementById('globalSong');
-    if(!song){ console.warn('⚠ globalSong element not found'); return; }
-    const t=parseFloat(localStorage.getItem('songTime')||0);
-    const wasPlaying=localStorage.getItem('songPlaying')==='true';
-    if(!isNaN(t) && t>0) song.currentTime=t;
-    song.volume=1;
-    console.log('🎵 Final: resumed at', t.toFixed(2)+'s, will play:', wasPlaying);
-    if(wasPlaying){
-        song.play().then(()=>{
-            console.log('✓ Audio resumed playing for final');
-            localStorage.setItem('songPlaying','true');
-        }).catch(err=>console.warn('⚠ Resume failed:',err.message));
-    }
-    setInterval(()=>localStorage.setItem('songTime',song.currentTime),500);
-    song.addEventListener('play',()=>localStorage.setItem('songPlaying','true'));
-    song.addEventListener('pause',()=>localStorage.setItem('songPlaying','false'));
+  const song=document.getElementById('globalSong');
+  const btn=document.getElementById('playPauseBtn');
+  if(!song) return;
+  song.volume=1;
+  const t=parseFloat(sessionStorage.getItem('audioTime')||localStorage.getItem('songTime')||0);
+  const wasPlaying=sessionStorage.getItem('audioPlaying')==='true'||localStorage.getItem('songPlaying')==='true';
+  if(!isNaN(t) && t>0) song.currentTime=t;
+  console.log('🎵 Final: time='+t.toFixed(1)+'s, wasPlaying='+wasPlaying);
+  const updateProgress=()=>{
+    const bar=document.getElementById('progressBar');
+    if(bar && song.duration) bar.style.width=((song.currentTime/song.duration)*100)+'%';
+  };
+  setInterval(()=>{
+    sessionStorage.setItem('audioTime',song.currentTime);
+    localStorage.setItem('songTime',song.currentTime);
+    updateProgress();
+  },500);
+  song.addEventListener('play',()=>{
+    sessionStorage.setItem('audioPlaying','true');
+    localStorage.setItem('songPlaying','true');
+    if(btn) btn.textContent='⏸';
+  });
+  song.addEventListener('pause',()=>{
+    sessionStorage.setItem('audioPlaying','false');
+    localStorage.setItem('songPlaying','false');
+    if(btn) btn.textContent='▶';
+  });
+  if(btn) btn.textContent=wasPlaying?'⏸':'▶';
+  if(wasPlaying){
+    song.play().then(()=>{
+      console.log('✓ Resumed on Final');
+      if(btn) btn.textContent='⏸';
+    }).catch(err=>{
+      console.log('⚠ Autoplay blocked');
+      if(btn) btn.textContent='▶';
+    });
+  }
+}
+function togglePlayPause(){
+  const song=document.getElementById('globalSong');
+  if(song.paused) song.play().catch(err=>console.warn('Play failed:',err.message));
+  else song.pause();
 }
 document.addEventListener('DOMContentLoaded',initGlobalSong);
 

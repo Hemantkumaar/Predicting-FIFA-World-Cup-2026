@@ -200,7 +200,12 @@ z-index:10000;
 <!-- global soundtrack for entire flow; using local Waka Waka file -->
 <audio id="globalSong" src="champion.mp3" preload="auto"></audio>
 
-<div class="container">
+<!-- Global Audio Player UI -->
+<div style="position:fixed;bottom:20px;right:20px;z-index:9999;background:rgba(0,0,0,.95);padding:10px 12px;border-radius:8px;border:2px solid #f6c453;display:flex;align-items:center;gap:8px;font-size:11px;box-shadow:0 4px 20px rgba(0,0,0,.8);font-family:system-ui;">
+  <button id="playPauseBtn" style="background:#f6c453;color:#000;border:none;padding:5px 8px;border-radius:4px;cursor:pointer;font-weight:bold;font-size:12px;line-height:1;" onclick="togglePlayPause()">▶</button>
+  <span style="color:#a9b4d0;font-size:10px;">🎵 Waka Waka</span>
+  <div style="width:80px;height:2px;background:rgba(255,255,255,.2);border-radius:1px;overflow:hidden;"><div id="progressBar" style="height:100%;background:#f6c453;width:0%;"></div></div>
+</div>\n\n<div class="container">
 <h1>FIFA World Cup 2026 Prediction</h1>
 <button id="simAllGroupsBtn" title="Simulate all groups" onclick="simulateAllGroups()">
   ▶︎
@@ -221,39 +226,66 @@ z-index:10000;
 
 /* -------- GLOBAL SOUNDTRACK CONTROLS -------- */
 function initGlobalSong(){
-  const song = document.getElementById('globalSong');
+  const song=document.getElementById('globalSong');
+  const btn=document.getElementById('playPauseBtn');
   if(!song) return;
-  // resume previous time if available
-  const t = parseFloat(localStorage.getItem('songTime')||0);
-  if(!isNaN(t)) song.currentTime = t;
-  // autoplay if already playing
-  if(localStorage.getItem('songPlaying')==='true'){
-    song.play().catch(()=>{});
-  }
-  // save position periodically
+  song.volume=1;
+  const t=parseFloat(sessionStorage.getItem('audioTime')||localStorage.getItem('songTime')||0);
+  const wasPlaying=sessionStorage.getItem('audioPlaying')==='true'||localStorage.getItem('songPlaying')==='true';
+  if(!isNaN(t) && t>0) song.currentTime=t;
+  console.log('🎵 Fifa Sim: restored time='+t.toFixed(1)+'s, wasPlaying='+wasPlaying);
+  
+  const updateProgress=()=>{
+    const bar=document.getElementById('progressBar');
+    if(bar && song.duration) bar.style.width=((song.currentTime/song.duration)*100)+'%';
+  };
+  
   setInterval(()=>{
-    localStorage.setItem('songTime', song.currentTime);
+    sessionStorage.setItem('audioTime',song.currentTime);
+    localStorage.setItem('songTime',song.currentTime);
+    updateProgress();
   },500);
-  song.addEventListener('play',()=>localStorage.setItem('songPlaying','true'));
-  song.addEventListener('pause',()=>localStorage.setItem('songPlaying','false'));
+  
+  song.addEventListener('play',()=>{
+    sessionStorage.setItem('audioPlaying','true');
+    localStorage.setItem('songPlaying','true');
+    if(btn) btn.textContent='⏸';
+    console.log('▶ Audio playing');
+  });
+  
+  song.addEventListener('pause',()=>{
+    sessionStorage.setItem('audioPlaying','false');
+    localStorage.setItem('songPlaying','false');
+    if(btn) btn.textContent='▶';
+    console.log('⏸ Audio paused');
+  });
+  
+  if(btn) btn.textContent=wasPlaying?'⏸':'▶';
+  
+  if(wasPlaying){
+    song.play().then(()=>{
+      console.log('✓ Auto-resumed');\n      if(btn) btn.textContent='⏸';
+    }).catch(err=>{
+      console.log('⚠ Autoplay blocked, waiting for click...');
+      if(btn) btn.textContent='▶';
+    });
+  }
 }
 
-document.addEventListener('DOMContentLoaded', ()=>{
+function togglePlayPause(){
+  const song=document.getElementById('globalSong');
+  if(song.paused) song.play().catch(err=>console.warn('Play failed:',err.message));
+  else song.pause();
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
     initGlobalSong();
-    console.log('🎵 Audio init: waiting for user interaction...');
-    // start playing when user first interacts
-    const enableAudio = ()=>{
+    const enableAudio=()=>{
         const s=document.getElementById('globalSong');
-        if(s){
-            s.play().then(()=>{
-                console.log('✓ Audio playing');
-            }).catch(err=>{
-                console.warn('⚠ Audio play failed:', err.message);
-            });
-        }
+        if(s && s.paused) s.play().catch(()=>{});
     };
-    document.body.addEventListener('click', enableAudio, {once:true});
-    document.body.addEventListener('touchstart', enableAudio, {once:true});
+    document.body.addEventListener('click',enableAudio,{once:true});
+    document.body.addEventListener('touchstart',enableAudio,{once:true});
 });/* ---------------- CONFETTI CONTROL ---------------- */
 let confettiAnimation;
 let confettiActive = false;

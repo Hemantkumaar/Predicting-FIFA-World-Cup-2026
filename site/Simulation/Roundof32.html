@@ -99,6 +99,13 @@ cursor:pointer;
 <!-- persistent soundtrack for tournament flow; local file -->
 <audio id="globalSong" src="champion.mp3" preload="auto"></audio>
 
+<!-- Global Audio Player UI -->
+<div style="position:fixed;bottom:20px;right:20px;z-index:9999;background:rgba(0,0,0,.95);padding:10px 12px;border-radius:8px;border:2px solid #f6c453;display:flex;align-items:center;gap:8px;font-size:11px;box-shadow:0 4px 20px rgba(0,0,0,.8);font-family:system-ui;">
+  <button id="playPauseBtn" style="background:#f6c453;color:#000;border:none;padding:5px 8px;border-radius:4px;cursor:pointer;font-weight:bold;font-size:12px;line-height:1;" onclick="togglePlayPause()">▶</button>
+  <span style="color:#a9b4d0;font-size:10px;">🎵 Waka Waka</span>
+  <div style="width:80px;height:2px;background:rgba(255,255,255,.2);border-radius:1px;overflow:hidden;"><div id="progressBar" style="height:100%;background:#f6c453;width:0%;"></div></div>
+</div>
+
 <div class="container">
 <h1>🏆 Round of 32</h1>
 
