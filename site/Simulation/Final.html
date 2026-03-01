@@ -112,6 +112,9 @@ cursor:pointer;
 
 <canvas id="confetti"></canvas>
 
+<!-- persistent soundtrack for entire flow -->
+<audio id="globalSong" src="champion.mp3" preload="auto"></audio>
+
 <!-- champion song placeholder; supply a file named 'champion.mp3' or adjust path -->
 <audio id="championSong" src="champion.mp3" preload="auto"></audio>
 
@@ -131,6 +134,19 @@ cursor:pointer;
 <button class="resetBtn" onclick="resetTournament()">Reset Tournament</button>
 
 <script>
+
+/* -------- GLOBAL SOUNDTRACK CONTROLS -------- */
+function initGlobalSong(){
+	const song=document.getElementById('globalSong');
+	if(!song) return;
+	const t=parseFloat(localStorage.getItem('songTime')||0);
+	if(!isNaN(t)) song.currentTime=t;
+	if(localStorage.getItem('songPlaying')==='true') song.play().catch(()=>{});
+	setInterval(()=>localStorage.setItem('songTime',song.currentTime),500);
+	song.addEventListener('play',()=>localStorage.setItem('songPlaying','true'));
+	song.addEventListener('pause',()=>localStorage.setItem('songPlaying','false'));
+}
+document.addEventListener('DOMContentLoaded',initGlobalSong);
 
 /* -------- LOAD SEMIFINAL WINNERS -------- */
 

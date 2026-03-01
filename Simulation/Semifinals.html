@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Round of 16 - FIFA 2026</title>
+<title>Semifinals - FIFA 2026</title>
 
 <style>
 body{
@@ -14,7 +14,7 @@ color:white;
 }
 
 .container{
-max-width:1300px;
+max-width:1100px;
 margin:auto;
 padding:40px 20px;
 }
@@ -42,12 +42,6 @@ border:1px solid rgba(255,255,255,.2);
 background:rgba(255,255,255,.05);
 color:white;
 font-weight:bold;
-cursor:pointer;
-}
-
-.teamBtn:disabled{
-opacity:.5;
-cursor:not-allowed;
 }
 
 .predictBtn{
@@ -92,15 +86,18 @@ cursor:pointer;
 
 <body>
 
+<!-- persistent soundtrack for tournament flow -->
+<audio id="globalSong" src="champion.mp3" preload="auto"></audio>
+
 <div class="container">
-<h1>🏆 Round of 16</h1>
+<h1>🏆 Semifinals</h1>
 
 <button class="simAllBtn" onclick="simulateAll()">Simulate All Matches</button>
 
 <div id="matches"></div>
 </div>
 
-<button class="backBtn" onclick="window.location.href='knockout.html'">←</button>
+<button class="backBtn" onclick="window.location.href='quarterfinals.html'">←</button>
 <button class="nextBtn" onclick="goNext()">➜</button>
 
 <script>
@@ -118,28 +115,23 @@ function initGlobalSong(){
 }
 document.addEventListener('DOMContentLoaded',initGlobalSong);
 
-/* -------- LOAD ROUND 32 WINNERS -------- */
+/* -------- LOAD QUARTERFINAL WINNERS -------- */
 
-let teams = JSON.parse(localStorage.getItem("round32_winners"));
+let teams = JSON.parse(localStorage.getItem("quarterfinal_winners"));
 
-if(!teams || teams.length !== 16){
-alert("Complete Round of 32 first!");
-window.location.href="knockout.html";
+if(!teams || teams.length !== 4){
+alert("Complete Quarterfinals first!");
+window.location.href="quarterfinals.html";
 }
 
 /* -------- VARIABLES -------- */
 
-let r16Winners = new Array(8).fill(null);
-let votes={}, locked={};
-
+let sfWinners = new Array(2).fill(null);
 const container=document.getElementById("matches");
 
 /* -------- GENERATE MATCHES -------- */
 
-for(let i=0;i<16;i+=2){
-
-votes[i]={t1:0,t2:0};
-locked[i]=false;
+for(let i=0;i<4;i+=2){
 
 const team1=teams[i];
 const team2=teams[i+1];
@@ -149,12 +141,8 @@ div.className="match";
 
 div.innerHTML=`
 <div class="teams">
-<button class="teamBtn" id="t1-${i}" onclick="vote(${i},1)">
-${team1.name}
-</button>
-<button class="teamBtn" id="t2-${i}" onclick="vote(${i},2)">
-${team2.name}
-</button>
+<button class="teamBtn">${team1.name}</button>
+<button class="teamBtn">${team2.name}</button>
 </div>
 
 <button class="predictBtn" onclick="predict(${i})">
@@ -163,16 +151,6 @@ Run 10,000 Simulations
 `;
 
 container.appendChild(div);
-}
-
-/* -------- VOTING -------- */
-
-function vote(i,team){
-if(locked[i]) return;
-
-locked[i]=true;
-document.getElementById(`t1-${i}`).disabled=true;
-document.getElementById(`t2-${i}`).disabled=true;
 }
 
 /* -------- MONTE CARLO -------- */
@@ -195,32 +173,32 @@ else t2Wins++;
 const winner = t1Wins>t2Wins ? team1 : team2;
 
 /* SAVE PROPERLY */
-r16Winners[i/2]=winner;
-localStorage.setItem("round16_winners", JSON.stringify(r16Winners));
+sfWinners[i/2]=winner;
+localStorage.setItem("semifinal_winners", JSON.stringify(sfWinners));
 
-alert(`${winner.name} advances to Quarterfinals!`);
+alert(`${winner.name} advances to the Final!`);
 }
 
 /* -------- SIMULATE ALL -------- */
 
 function simulateAll(){
-for(let i=0;i<16;i+=2){
+for(let i=0;i<4;i+=2){
 predict(i);
 }
-alert("All Round of 16 matches simulated!");
+alert("All Semifinal matches simulated!");
 }
 
 /* -------- NEXT -------- */
 
 function goNext(){
-const saved=JSON.parse(localStorage.getItem("round16_winners"))||[];
+const saved=JSON.parse(localStorage.getItem("semifinal_winners"))||[];
 
-if(saved.filter(Boolean).length !== 8){
-alert("Complete all 8 matches first!");
+if(saved.filter(Boolean).length !== 2){
+alert("Complete both Semifinals first!");
 return;
 }
 
-window.location.href="quarterfinals.html";
+window.location.href="final.html";
 }
 
 </script>

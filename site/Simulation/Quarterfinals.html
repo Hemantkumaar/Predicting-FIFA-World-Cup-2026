@@ -105,6 +105,19 @@ cursor:pointer;
 
 <script>
 
+/* -------- GLOBAL SOUNDTRACK CONTROLS -------- */
+function initGlobalSong(){
+	const song=document.getElementById('globalSong');
+	if(!song) return;
+	const t=parseFloat(localStorage.getItem('songTime')||0);
+	if(!isNaN(t)) song.currentTime=t;
+	if(localStorage.getItem('songPlaying')==='true') song.play().catch(()=>{});
+	setInterval(()=>localStorage.setItem('songTime',song.currentTime),500);
+	song.addEventListener('play',()=>localStorage.setItem('songPlaying','true'));
+	song.addEventListener('pause',()=>localStorage.setItem('songPlaying','false'));
+}
+document.addEventListener('DOMContentLoaded',initGlobalSong);
+
 /* -------- LOAD ROUND 16 WINNERS -------- */
 
 let teams = JSON.parse(localStorage.getItem("round16_winners"));

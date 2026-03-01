@@ -197,6 +197,9 @@ z-index:10000;
 
 <canvas id="confetti"></canvas>
 
+<!-- global soundtrack for entire flow; file should contain full tournament music -->
+<audio id="globalSong" src="champion.mp3" preload="auto"></audio>
+
 <div class="container">
 <h1>FIFA World Cup 2026 Prediction</h1>
 <button id="simAllGroupsBtn" title="Simulate all groups" onclick="simulateAllGroups()">
@@ -215,6 +218,34 @@ z-index:10000;
 </div>
 
 <script>
+
+/* -------- GLOBAL SOUNDTRACK CONTROLS -------- */
+function initGlobalSong(){
+  const song = document.getElementById('globalSong');
+  if(!song) return;
+  // resume previous time if available
+  const t = parseFloat(localStorage.getItem('songTime')||0);
+  if(!isNaN(t)) song.currentTime = t;
+  // autoplay if already playing
+  if(localStorage.getItem('songPlaying')==='true'){
+    song.play().catch(()=>{});
+  }
+  // save position periodically
+  setInterval(()=>{
+    localStorage.setItem('songTime', song.currentTime);
+  },500);
+  song.addEventListener('play',()=>localStorage.setItem('songPlaying','true'));
+  song.addEventListener('pause',()=>localStorage.setItem('songPlaying','false'));
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  initGlobalSong();
+  // start playing when user first interacts
+  document.body.addEventListener('click', ()=>{
+    const s=document.getElementById('globalSong');
+    if(s && s.paused){ s.play().catch(()=>{}); }
+  },{once:true});
+});
 
 /* ---------------- CONFETTI CONTROL ---------------- */
 let confettiAnimation;
