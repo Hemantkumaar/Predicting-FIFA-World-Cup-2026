@@ -112,6 +112,9 @@ cursor:pointer;
 
 <canvas id="confetti"></canvas>
 
+<!-- champion song placeholder; supply a file named 'champion.mp3' or adjust path -->
+<audio id="championSong" src="champion.mp3" preload="auto"></audio>
+
 <div class="container">
 <h1>🏆 FIFA 2026 FINAL</h1>
 
@@ -192,8 +195,13 @@ ${team1.name}: ${t1Prob.toFixed(2)}%<br>
 ${team2.name}: ${t2Prob.toFixed(2)}%
 `;
 
-	trophy.textContent="🏆";
-	startFireworks();
+		trophy.textContent="🏆";
+		const song = document.getElementById("championSong");
+		if(song){
+			song.currentTime = 0;
+			song.play().catch(()=>{});
+		}
+		startFireworks();
 }
 
 },1000);
