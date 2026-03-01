@@ -239,15 +239,22 @@ function initGlobalSong(){
 }
 
 document.addEventListener('DOMContentLoaded', ()=>{
-  initGlobalSong();
-  // start playing when user first interacts
-  document.body.addEventListener('click', ()=>{
-    const s=document.getElementById('globalSong');
-    if(s && s.paused){ s.play().catch(()=>{}); }
-  },{once:true});
-});
-
-/* ---------------- CONFETTI CONTROL ---------------- */
+    initGlobalSong();
+    console.log('🎵 Audio init: waiting for user interaction...');
+    // start playing when user first interacts
+    const enableAudio = ()=>{
+        const s=document.getElementById('globalSong');
+        if(s){
+            s.play().then(()=>{
+                console.log('✓ Audio playing');
+            }).catch(err=>{
+                console.warn('⚠ Audio play failed:', err.message);
+            });
+        }
+    };
+    document.body.addEventListener('click', enableAudio, {once:true});
+    document.body.addEventListener('touchstart', enableAudio, {once:true});
+});/* ---------------- CONFETTI CONTROL ---------------- */
 let confettiAnimation;
 let confettiActive = false;
 
