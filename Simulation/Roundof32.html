@@ -116,9 +116,16 @@ function initGlobalSong(){
     const song=document.getElementById('globalSong');
     if(!song){ console.warn('⚠ globalSong element not found'); return; }
     const t=parseFloat(localStorage.getItem('songTime')||0);
-    if(!isNaN(t)) song.currentTime=t;
-    console.log('🎵 Song resumed at', t.toFixed(2)+'s, playing:', localStorage.getItem('songPlaying')==='true');
-    if(localStorage.getItem('songPlaying')==='true') song.play().catch(err=>console.warn('⚠ Resume failed:',err.message));
+    const wasPlaying=localStorage.getItem('songPlaying')==='true';
+    if(!isNaN(t) && t>0) song.currentTime=t;
+    song.volume=1;
+    console.log('🎵 Roundof32: resumed at', t.toFixed(2)+'s, will play:', wasPlaying);
+    if(wasPlaying){
+        song.play().then(()=>{
+            console.log('✓ Audio resumed playing');
+            localStorage.setItem('songPlaying','true');
+        }).catch(err=>console.warn('⚠ Resume failed:',err.message));
+    }
     setInterval(()=>localStorage.setItem('songTime',song.currentTime),500);
     song.addEventListener('play',()=>localStorage.setItem('songPlaying','true'));
     song.addEventListener('pause',()=>localStorage.setItem('songPlaying','false'));
