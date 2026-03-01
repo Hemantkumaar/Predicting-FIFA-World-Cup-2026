@@ -192,46 +192,67 @@ ${team1.name}: ${t1Prob.toFixed(2)}%<br>
 ${team2.name}: ${t2Prob.toFixed(2)}%
 `;
 
-trophy.textContent="🏆";
-startMassiveConfetti();
+	trophy.textContent="🏆";
+	startFireworks();
 }
 
 },1000);
 }
 
-/* -------- MASSIVE CONFETTI -------- */
+/* -------- FIREWORKS CELEBRATION -------- */
 
-let anim, active=false;
+let fireworkAnim;
+let fwActive=false;
 
-function startMassiveConfetti(){
-const canvas=document.getElementById("confetti");
-const ctx=canvas.getContext("2d");
-canvas.width=window.innerWidth;
-canvas.height=window.innerHeight;
-active=true;
+function startFireworks(){
+	const canvas=document.getElementById("confetti");
+	const ctx=canvas.getContext("2d");
+	canvas.width=window.innerWidth;
+	canvas.height=window.innerHeight;
+	fwActive=true;
+	let particles = [];
 
-let pieces=[];
-for(let i=0;i<600;i++){
-pieces.push({
-x:Math.random()*canvas.width,
-y:Math.random()*canvas.height-canvas.height,
-size:Math.random()*8+4,
-speed:Math.random()*5+2,
-color:`hsl(${Math.random()*360},100%,50%)`
-});
+	function spawnFirework(){
+		const x = Math.random()*canvas.width;
+		const y = Math.random()*canvas.height*0.5;
+		const count = 30 + Math.floor(Math.random()*30);
+		for(let i=0;i<count;i++){
+			const angle = Math.random()*Math.PI*2;
+			const speed = Math.random()*4+1;
+			particles.push({
+				x,y,
+				vx:Math.cos(angle)*speed,
+				vy:Math.sin(angle)*speed,
+				life:60 + Math.random()*30,
+				color:`hsl(${Math.random()*360},100%,50%)`
+			});
+		}
+	}
+
+	function draw(){
+		ctx.clearRect(0,0,canvas.width,canvas.height);
+		particles.forEach((p,i)=>{
+			ctx.globalAlpha = p.life/90;
+			ctx.fillStyle=p.color;
+			ctx.beginPath();
+			ctx.arc(p.x,p.y,2,0,Math.PI*2);
+			ctx.fill();
+			p.x += p.vx;
+			p.y += p.vy;
+			p.life--;
+			if(p.life<=0) particles.splice(i,1);
+		});
+		if(fwActive){
+			if(Math.random()<0.08) spawnFirework();
+			fireworkAnim = requestAnimationFrame(draw);
+		}
+	}
+	draw();
 }
 
-function draw(){
-if(!active)return;
-ctx.clearRect(0,0,canvas.width,canvas.height);
-pieces.forEach(p=>{
-ctx.fillStyle=p.color;
-ctx.fillRect(p.x,p.y,p.size,p.size);
-p.y+=p.speed;
-});
-anim=requestAnimationFrame(draw);
-}
-draw();
+function stopFireworks(){
+	fwActive=false;
+	cancelAnimationFrame(fireworkAnim);
 }
 
 /* -------- RESET -------- */
