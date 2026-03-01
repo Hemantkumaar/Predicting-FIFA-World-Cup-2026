@@ -173,6 +173,16 @@ const t2Prob=(t2Wins/SIM)*100;
 
 const winner = t1Prob>t2Prob ? team1 : team2;
 
+	// attempt to unlock audio playback early (some browsers require a
+	// user gesture). we start & immediately pause the track here so that
+	// later `song.play()` during the reveal is more likely to succeed.
+	const earlySong = document.getElementById("championSong");
+	if(earlySong){
+		earlySong.play().then(()=>earlySong.pause()).catch(()=>{
+			// ignore errors; if autoplay is blocked we'll try again later
+		});
+	}
+
 localStorage.setItem("champion", JSON.stringify(winner));
 
 let t=5;
@@ -202,7 +212,9 @@ ${team2.name}: ${t2Prob.toFixed(2)}%
 		const song = document.getElementById("championSong");
 		if(song){
 			song.currentTime = 0;
-			song.play().catch(()=>{});
+			song.play().catch(err=>{
+				console.warn("Could not play champion song:", err);
+			});
 		}
 		startFireworks();
 }

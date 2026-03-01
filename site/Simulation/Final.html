@@ -192,6 +192,12 @@ if(t<=0){
 clearInterval(timer);
 countdown.textContent="";
 
+    // unlock audio with initial gesture
+    const earlySong = document.getElementById("championSong");
+    if(earlySong){
+        earlySong.play().then(()=>earlySong.pause()).catch(()=>{});
+    }
+
 championDiv.innerHTML=`
 🔥 ${winner.name} WINS THE WORLD CUP! 🔥<br><br>
 ${team1.name}: ${t1Prob.toFixed(2)}%<br>
@@ -232,8 +238,10 @@ function startFireworks(){
 			const speed = Math.random()*4+1;
 			particles.push({
 				x,y,
-				vx:Math.cos(angle)*speed,
-				vy:Math.sin(angle)*speed,
+			song.currentTime = 0;
+			song.play().catch(err=>{
+				console.warn("Could not play champion song:", err);
+			});
 				life:60 + Math.random()*30,
 				color:`hsl(${Math.random()*360},100%,50%)`
 			});
