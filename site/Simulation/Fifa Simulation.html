@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>FIFA World Cup 2026 Prediction</title>
+
+<style>
+:root{
+--bg:#0b1220;
+--text:#eef3ff;
+--muted:#a9b4d0;
+--accent:#f6c453;
+--stroke:rgba(255,255,255,.12);
+}
+
+body{
+margin:0;
+font-family:system-ui;
+background:linear-gradient(180deg,#070b14,var(--bg));
+color:var(--text);
+overflow-x:hidden;
+}
+
+.container{max-width:1150px;margin:auto;padding:20px}
+
+.groupCard{
+margin-top:25px;
+background:rgba(18,28,51,.85);
+border-radius:18px;
+padding:20px;
+border:1px solid var(--stroke);
+}
+
+.groupHeader{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:15px;
+}
+
+.teams{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:12px;
+margin-bottom:15px;
+}
+
+.team{
+padding:12px;
+border-radius:12px;
+border:1px solid rgba(255,255,255,.15);
+background:rgba(255,255,255,.05);
+color:white;
+cursor:pointer;
+font-weight:bold;
+display:flex;
+align-items:center;
+gap:10px;
+}
+
+.team:disabled{
+opacity:.5;
+cursor:not-allowed;
+}
+
+.flag{font-size:20px}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:10px;
+}
+
+th,td{
+padding:8px;
+border-bottom:1px solid rgba(255,255,255,.1);
+}
+
+.right{text-align:right}
+
+.predictBtn{
+margin-top:15px;
+padding:10px 15px;
+background:rgba(246,196,83,.15);
+border:1px solid rgba(246,196,83,.5);
+color:#ffe19a;
+border-radius:10px;
+cursor:pointer;
+font-weight:bold;
+}
+
+.modalOverlay{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.6);
+display:none;
+align-items:center;
+justify-content:center;
+z-index:9999;
+}
+
+.modal{
+background:#121c33;
+padding:25px;
+border-radius:20px;
+width:90%;
+max-width:700px;
+position:relative;
+animation:pop .3s ease;
+}
+
+@keyframes pop{
+from{transform:scale(.9);opacity:0}
+to{transform:scale(1);opacity:1}
+}
+
+.closeBtn{
+position:absolute;
+right:15px;
+top:15px;
+cursor:pointer;
+background:rgba(255,255,255,.1);
+border:none;
+color:white;
+padding:6px 10px;
+border-radius:8px;
+}
+
+.perfCard{
+margin-top:10px;
+padding:10px;
+border-radius:12px;
+background:rgba(255,255,255,.05);
+border:1px solid rgba(255,255,255,.1);
+}
+
+.highlight{
+border:2px solid #f6c453;
+box-shadow:0 0 20px rgba(246,196,83,.6);
+}
+
+.bar{
+height:10px;
+background:rgba(255,255,255,.15);
+border-radius:999px;
+overflow:hidden;
+margin-top:5px;
+}
+
+.fill{
+height:100%;
+background:#f6c453;
+width:0%;
+transition:width .6s ease;
+}
+
+.countdown{
+font-size:28px;
+font-weight:bold;
+text-align:center;
+margin-bottom:15px;
+color:#f6c453;
+}
+
+canvas{
+position:fixed;
+pointer-events:none;
+top:0;
+left:0;
+z-index:10000;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="confetti"></canvas>
+
+<div class="container">
+<h1>FIFA World Cup 2026 Prediction</h1>
+<div id="groupsWrap"></div>
+</div>
+
+<div class="modalOverlay" id="modalOverlay">
+<div class="modal">
+<button class="closeBtn" onclick="closeModal()">✕</button>
+<h2 id="modalTitle"></h2>
+<div id="countdown" class="countdown"></div>
+<div id="modalContent"></div>
+</div>
+</div>
+
+<script>
+
+/* ---------------- CONFETTI CONTROL ---------------- */
+let confettiAnimation;
+let confettiActive = false;
+
+function startConfetti(){
+const canvas = document.getElementById("confetti");
+const ctx = canvas.getContext("2d");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+confettiActive = true;
+
+let pieces = [];
+for(let i=0;i<180;i++){
+pieces.push({
+x: Math.random()*canvas.width,
+y: Math.random()*canvas.height-canvas.height,
+size: Math.random()*8+4,
+speed: Math.random()*3+2,
+color: `hsl(${Math.random()*360},100%,50%)`
+});
+}
+
+function animate(){
+if(!confettiActive) return;
+ctx.clearRect(0,0,canvas.width,canvas.height);
+pieces.forEach(p=>{
+ctx.fillStyle=p.color;
+ctx.fillRect(p.x,p.y,p.size,p.size);
+p.y+=p.speed;
+});
+confettiAnimation = requestAnimationFrame(animate);
+}
+animate();
+}
+
+function stopConfetti(){
+confettiActive=false;
+cancelAnimationFrame(confettiAnimation);
+const canvas=document.getElementById("confetti");
+const ctx=canvas.getContext("2d");
+ctx.clearRect(0,0,canvas.width,canvas.height);
+}
+
+/* ---------------- GROUP DATA ---------------- */
+const GROUPS=[
+{code:"A",predictedId:"mexico",teams:[
+{id:"mexico",name:"Mexico",flag:"🇲🇽",perf:72.5},
+{id:"south_africa",name:"South Africa",flag:"🇿🇦",perf:58.3},
+{id:"south_korea",name:"South Korea",flag:"🇰🇷",perf:66.7},
+{id:"tbd_a",name:"TBD",flag:"🏳️",perf:40}
+]},
+{code:"B",predictedId:"canada",teams:[
+{id:"canada",name:"Canada",flag:"🇨🇦",perf:70.2},
+{id:"qatar",name:"Qatar",flag:"🇶🇦",perf:55.5},
+{id:"swiss",name:"Switzerland",flag:"🇨🇭",perf:63.1},
+{id:"tbd_b",name:"TBD",flag:"🏳️",perf:42}
+]},
+{code:"C",predictedId:"brazil",teams:[
+{id:"brazil",name:"Brazil",flag:"🇧🇷",perf:79.4},
+{id:"morocco",name:"Morocco",flag:"🇲🇦",perf:61},
+{id:"haiti",name:"Haiti",flag:"🇭🇹",perf:47.2},
+{id:"scotland",name:"Scotland",flag:"🏴󠁧󠁢󠁳󠁣󠁴󠁿",perf:53.8}
+]},
+{code:"D",predictedId:"usa",teams:[
+{id:"usa",name:"USA",flag:"🇺🇸",perf:68.9},
+{id:"paraguay",name:"Paraguay",flag:"🇵🇾",perf:56.4},
+{id:"australia",name:"Australia",flag:"🇦🇺",perf:59.7},
+{id:"tbd_d",name:"TBD",flag:"🏳️",perf:41.5}
+]},
+{code:"E",predictedId:"germany",teams:[
+{id:"germany",name:"Germany",flag:"🇩🇪",perf:74},
+{id:"curacao",name:"Curaçao",flag:"🇨🇼",perf:46.8},
+{id:"ivory",name:"Ivory Coast",flag:"🇨🇮",perf:55.2},
+{id:"ecuador",name:"Ecuador",flag:"🇪🇨",perf:57.6}
+]},
+{code:"F",predictedId:"netherlands",teams:[
+{id:"netherlands",name:"Netherlands",flag:"🇳🇱",perf:71.3},
+{id:"japan",name:"Japan",flag:"🇯🇵",perf:62.9},
+{id:"tbd_f",name:"TBD",flag:"🏳️",perf:45},
+{id:"tbd_f2",name:"TBD",flag:"🏳️",perf:44}
+]},
+{code:"G",predictedId:"belgium",teams:[
+{id:"belgium",name:"Belgium",flag:"🇧🇪",perf:67.2},
+{id:"egypt",name:"Egypt",flag:"🇪🇬",perf:54.8},
+{id:"iran",name:"Iran",flag:"🇮🇷",perf:52.6},
+{id:"newzealand",name:"New Zealand",flag:"🇳🇿",perf:49.9}
+]},
+{code:"H",predictedId:"spain",teams:[
+{id:"spain",name:"Spain",flag:"🇪🇸",perf:73.8},
+{id:"capeverde",name:"Cape Verde",flag:"🇨🇻",perf:50.2},
+{id:"saudi",name:"Saudi Arabia",flag:"🇸🇦",perf:53.7},
+{id:"uruguay",name:"Uruguay",flag:"🇺🇾",perf:66.1}
+]},
+{code:"I",predictedId:"france",teams:[
+{id:"france",name:"France",flag:"🇫🇷",perf:76},
+{id:"senegal",name:"Senegal",flag:"🇸🇳",perf:58.8},
+{id:"tbd_i",name:"TBD",flag:"🏳️",perf:43.6},
+{id:"norway",name:"Norway",flag:"🇳🇴",perf:55.9}
+]},
+{code:"J",predictedId:"argentina",teams:[
+{id:"argentina",name:"Argentina",flag:"🇦🇷",perf:77.6},
+{id:"algeria",name:"Algeria",flag:"🇩🇿",perf:56.2},
+{id:"austria",name:"Austria",flag:"🇦🇹",perf:58.1},
+{id:"jordan",name:"Jordan",flag:"🇯🇴",perf:49.5}
+]},
+{code:"K",predictedId:"portugal",teams:[
+{id:"portugal",name:"Portugal",flag:"🇵🇹",perf:72.4},
+{id:"uzbekistan",name:"Uzbekistan",flag:"🇺🇿",perf:51.7},
+{id:"colombia",name:"Colombia",flag:"🇨🇴",perf:60.9},
+{id:"tbd_k",name:"TBD",flag:"🏳️",perf:43.8}
+]},
+{code:"L",predictedId:"england",teams:[
+{id:"england",name:"England",flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿",perf:74.7},
+{id:"croatia",name:"Croatia",flag:"🇭🇷",perf:63.5},
+{id:"ghana",name:"Ghana",flag:"🇬🇭",perf:52},
+{id:"panama",name:"Panama",flag:"🇵🇦",perf:48.4}
+]}
+];
+
+/* ---------------- IN MEMORY VOTES ---------------- */
+let votesData={};
+let lockedGroups={};
+
+GROUPS.forEach(g=>{
+votesData[g.code]={};
+lockedGroups[g.code]=false;
+g.teams.forEach(t=>votesData[g.code][t.id]=0);
+});
+
+/* ---------------- RENDER ---------------- */
+function render(){
+const wrap=document.getElementById("groupsWrap");
+wrap.innerHTML="";
+GROUPS.forEach(group=>{
+const card=document.createElement("div");
+card.className="groupCard";
+
+const votes=votesData[group.code];
+const total=Object.values(votes).reduce((a,b)=>a+b,0);
+
+card.innerHTML=`
+<div class="groupHeader">
+<h2>Group ${group.code}</h2>
+<span>Total votes: ${total}</span>
+</div>
+<div class="teams"></div>
+<table>
+<thead><tr><th>Team</th><th class="right">Votes</th><th class="right">Share</th></tr></thead>
+<tbody></tbody>
+</table>
+<button class="predictBtn" onclick="predict('${group.code}')">Predict Group ${group.code}</button>
+`;
+
+const teamsDiv=card.querySelector(".teams");
+group.teams.forEach(team=>{
+const btn=document.createElement("button");
+btn.className="team";
+btn.disabled=lockedGroups[group.code];
+btn.innerHTML=`<span class="flag">${team.flag}</span>${team.name}`;
+btn.onclick=()=>vote(group.code,team.id);
+teamsDiv.appendChild(btn);
+});
+
+const tbody=card.querySelector("tbody");
+group.teams.forEach(team=>{
+const v=votes[team.id];
+const share=total?((v/total)*100).toFixed(1)+"%":"—";
+tbody.innerHTML+=`<tr><td>${team.flag} ${team.name}</td><td class="right">${v}</td><td class="right">${share}</td></tr>`;
+});
+
+wrap.appendChild(card);
+});
+}
+
+function vote(groupCode,teamId){
+if(lockedGroups[groupCode])return;
+votesData[groupCode][teamId]++;
+lockedGroups[groupCode]=true;
+render();
+}
+
+function predict(groupCode){
+const group=GROUPS.find(g=>g.code===groupCode);
+const modal=document.getElementById("modalOverlay");
+const title=document.getElementById("modalTitle");
+const content=document.getElementById("modalContent");
+const countdown=document.getElementById("countdown");
+
+modal.style.display="flex";
+title.textContent="Group "+group.code+" Prediction";
+content.innerHTML="";
+countdown.textContent="5";
+
+let t=5;
+const timer=setInterval(()=>{
+t--;
+countdown.textContent=t;
+if(t<=0){
+clearInterval(timer);
+countdown.textContent="";
+group.teams.forEach(team=>{
+const div=document.createElement("div");
+div.className="perfCard";
+if(team.id===group.predictedId)div.classList.add("highlight");
+div.innerHTML=`<b>${team.flag} ${team.name}</b> - ${team.perf}%<div class="bar"><div class="fill" style="width:${team.perf}%"></div></div>`;
+content.appendChild(div);
+});
+startConfetti();
+}
+},1000);
+}
+
+function closeModal(){
+document.getElementById("modalOverlay").style.display="none";
+stopConfetti();
+}
+
+render();
+</script>
+
+<!-- NEXT PAGE BUTTON -->
+<button id="nextBtn" onclick="window.location.href='knockout.html'">
+  ➜
+</button>
+
+<style>
+#nextBtn{
+  position:fixed;
+  bottom:30px;
+  right:30px;
+  width: 25px;
+  height:25px;
+  border-radius:25%;
+  border:none;
+  background:linear-gradient(135deg,#f6c453,#d4a017);
+  color:#000;
+  font-size:16px;
+  font-weight:bold;
+  cursor:pointer;
+  box-shadow:0 0 15px rgba(246,196,83,.7);
+  transition:.3s;
+  z-index:10001;
+}
+#nextBtn:hover{
+  transform:translateY(-5px);
+  box-shadow:0 0 15px rgba(246,196,83,1);
+}
+</style>
+</body>
+</html>

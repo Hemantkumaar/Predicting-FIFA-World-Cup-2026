@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Round of 32 - FIFA 2026</title>
+
+<style>
+body{
+margin:0;
+font-family:system-ui;
+background:linear-gradient(180deg,#070b14,#0b1220);
+color:white;
+}
+
+.container{
+max-width:1300px;
+margin:auto;
+padding:40px 20px;
+}
+
+h1{text-align:center;margin-bottom:30px;}
+
+.match{
+background:rgba(18,28,51,.85);
+padding:20px;
+border-radius:15px;
+border:1px solid rgba(255,255,255,.1);
+margin-bottom:25px;
+}
+
+.teams{
+display:flex;
+gap:15px;
+}
+
+.teamBtn{
+flex:1;
+padding:12px;
+border-radius:10px;
+border:1px solid rgba(255,255,255,.2);
+background:rgba(255,255,255,.05);
+color:white;
+font-weight:bold;
+cursor:pointer;
+}
+
+.teamBtn:disabled{
+opacity:.5;
+cursor:not-allowed;
+}
+
+.predictBtn{
+margin-top:15px;
+padding:8px 14px;
+background:#f6c453;
+border:none;
+border-radius:8px;
+cursor:pointer;
+font-weight:bold;
+}
+
+.results{
+margin-top:10px;
+font-size:14px;
+color:#ccc;
+}
+
+.nextBtn{
+position:fixed;
+bottom:30px;
+right:30px;
+width:60px;
+height:60px;
+border-radius:50%;
+border:none;
+background:linear-gradient(135deg,#f6c453,#d4a017);
+color:#000;
+font-size:26px;
+font-weight:bold;
+cursor:pointer;
+}
+
+.simAllBtn{
+margin-bottom:30px;
+padding:10px 20px;
+background:#28a745;
+border:none;
+border-radius:10px;
+color:white;
+font-weight:bold;
+cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h1>🏆 Round of 32</h1>
+
+<button class="simAllBtn" onclick="simulateAll()">Simulate All Matches</button>
+
+<div id="matches"></div>
+</div>
+
+<button class="nextBtn" onclick="goNext()">➜</button>
+
+<script>
+
+/* -------- 32 TEAMS (STATIC FOR STABILITY) -------- */
+
+const TEAMS = [
+{name:"🇲🇽 Mexico",perf:72.5},
+{name:"🇨🇭 Switzerland",perf:63.1},
+{name:"🇧🇷 Brazil",perf:79.4},
+{name:"🇵🇹 Portugal",perf:72.4},
+{name:"🇺🇸 USA",perf:68.9},
+{name:"🇪🇸 Spain",perf:73.8},
+{name:"🇫🇷 France",perf:76},
+{name:"🇦🇷 Argentina",perf:77.6},
+{name:"🇳🇱 Netherlands",perf:71.3},
+{name:"🇩🇪 Germany",perf:74},
+{name:"🇧🇪 Belgium",perf:67.2},
+{name:"🏴 England",perf:74.7},
+{name:"🇯🇵 Japan",perf:62.9},
+{name:"🇺🇾 Uruguay",perf:66.1},
+{name:"🇨🇦 Canada",perf:70.2},
+{name:"🇨🇴 Colombia",perf:60.9},
+{name:"🇸🇳 Senegal",perf:58.8},
+{name:"🇵🇱 Poland",perf:55},
+{name:"🇰🇷 South Korea",perf:66.7},
+{name:"🇦🇺 Australia",perf:59.7},
+{name:"🇪🇬 Egypt",perf:54.8},
+{name:"🇮🇷 Iran",perf:52.6},
+{name:"🇦🇹 Austria",perf:58.1},
+{name:"🇳🇴 Norway",perf:55.9},
+{name:"🇵🇾 Paraguay",perf:56.4},
+{name:"🇸🇦 Saudi Arabia",perf:53.7},
+{name:"🇨🇮 Ivory Coast",perf:55.2},
+{name:"🇪🇨 Ecuador",perf:57.6},
+{name:"🇲🇦 Morocco",perf:61},
+{name:"🇭🇷 Croatia",perf:63.5},
+{name:"🇬🇭 Ghana",perf:52},
+{name:"🇵🇦 Panama",perf:48.4}
+];
+
+/* -------- VARIABLES -------- */
+
+let winners = new Array(16).fill(null);
+let votes = {};
+let locked = {};
+
+const container=document.getElementById("matches");
+
+/* -------- GENERATE MATCHES -------- */
+
+for(let i=0;i<32;i+=2){
+
+votes[i]={t1:0,t2:0};
+locked[i]=false;
+
+const team1=TEAMS[i];
+const team2=TEAMS[i+1];
+
+const div=document.createElement("div");
+div.className="match";
+
+div.innerHTML=`
+<div class="teams">
+<button class="teamBtn" id="t1-${i}" onclick="vote(${i},1)">
+${team1.name}
+</button>
+<button class="teamBtn" id="t2-${i}" onclick="vote(${i},2)">
+${team2.name}
+</button>
+</div>
+
+<div class="results" id="results-${i}">
+Total votes: 0<br>
+${team1.name} – 0 votes (—)<br>
+${team2.name} – 0 votes (—)
+</div>
+
+<button class="predictBtn" onclick="predict(${i})">
+Run 10,000 Simulations
+</button>
+`;
+
+container.appendChild(div);
+}
+
+/* -------- VOTING -------- */
+
+function vote(i,team){
+if(locked[i]) return;
+
+if(team===1) votes[i].t1++;
+else votes[i].t2++;
+
+locked[i]=true;
+document.getElementById(`t1-${i}`).disabled=true;
+document.getElementById(`t2-${i}`).disabled=true;
+
+updateResults(i);
+}
+
+function updateResults(i){
+const t1=votes[i].t1;
+const t2=votes[i].t2;
+const total=t1+t2;
+
+let s1="—",s2="—";
+if(total>0){
+s1=((t1/total)*100).toFixed(1)+"%";
+s2=((t2/total)*100).toFixed(1)+"%";
+}
+
+const team1=TEAMS[i];
+const team2=TEAMS[i+1];
+
+document.getElementById(`results-${i}`).innerHTML=`
+Total votes: ${total}<br>
+${team1.name} – ${t1} votes (${s1})<br>
+${team2.name} – ${t2} votes (${s2})
+`;
+}
+
+/* -------- MONTE CARLO -------- */
+
+function predict(i){
+
+const team1=TEAMS[i];
+const team2=TEAMS[i+1];
+
+const SIM=10000;
+let t1Wins=0, t2Wins=0;
+
+for(let s=0;s<SIM;s++){
+const total=team1.perf+team2.perf;
+const prob=team1.perf/total;
+if(Math.random()<prob) t1Wins++;
+else t2Wins++;
+}
+
+const winner = t1Wins>t2Wins ? team1 : team2;
+
+/* SAVE WINNER PROPERLY */
+winners[i/2]=winner;
+
+localStorage.setItem("round32_winners", JSON.stringify(winners));
+
+alert(`${winner.name} advances!`);
+}
+
+/* -------- SIMULATE ALL -------- */
+
+function simulateAll(){
+for(let i=0;i<32;i+=2){
+predict(i);
+}
+alert("All matches simulated!");
+}
+
+/* -------- NEXT BUTTON -------- */
+
+function goNext(){
+const saved=JSON.parse(localStorage.getItem("round32_winners"))||[];
+
+if(saved.filter(Boolean).length!==16){
+alert("Complete all 16 matches first!");
+return;
+}
+
+window.location.href="round16.html";
+}
+
+</script>
+
+</body>
+</html>

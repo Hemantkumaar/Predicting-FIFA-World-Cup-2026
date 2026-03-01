@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>FIFA 2026 Final</title>
+
+<style>
+body{
+margin:0;
+font-family:system-ui;
+background:radial-gradient(circle at center,#111a33,#070b14);
+color:white;
+text-align:center;
+overflow:hidden;
+}
+
+.container{
+padding:60px 20px;
+}
+
+h1{
+font-size:42px;
+margin-bottom:40px;
+}
+
+.finalMatch{
+background:rgba(18,28,51,.9);
+padding:30px;
+border-radius:20px;
+border:1px solid rgba(255,255,255,.1);
+max-width:700px;
+margin:auto;
+}
+
+.teams{
+display:flex;
+justify-content:space-between;
+gap:20px;
+margin-bottom:20px;
+}
+
+.team{
+flex:1;
+padding:15px;
+border-radius:12px;
+background:rgba(255,255,255,.05);
+font-size:20px;
+font-weight:bold;
+}
+
+.predictBtn{
+margin-top:20px;
+padding:12px 24px;
+background:#f6c453;
+border:none;
+border-radius:10px;
+font-weight:bold;
+font-size:16px;
+cursor:pointer;
+}
+
+.countdown{
+font-size:40px;
+margin:20px 0;
+color:#f6c453;
+font-weight:bold;
+}
+
+.champion{
+margin-top:30px;
+font-size:28px;
+font-weight:bold;
+}
+
+.trophy{
+font-size:80px;
+margin-top:20px;
+animation:float 2s infinite ease-in-out;
+}
+
+@keyframes float{
+0%{transform:translateY(0)}
+50%{transform:translateY(-10px)}
+100%{transform:translateY(0)}
+}
+
+canvas{
+position:fixed;
+top:0;
+left:0;
+pointer-events:none;
+z-index:1000;
+}
+
+.resetBtn{
+position:fixed;
+bottom:30px;
+right:30px;
+padding:12px 20px;
+border-radius:10px;
+border:none;
+background:#dc3545;
+color:white;
+font-weight:bold;
+cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="confetti"></canvas>
+
+<div class="container">
+<h1>🏆 FIFA 2026 FINAL</h1>
+
+<div class="finalMatch" id="finalMatch"></div>
+
+<div id="countdown" class="countdown"></div>
+<div id="champion" class="champion"></div>
+<div id="trophy" class="trophy"></div>
+</div>
+
+<button class="resetBtn" onclick="resetTournament()">Reset Tournament</button>
+
+<script>
+
+/* -------- LOAD SEMIFINAL WINNERS -------- */
+
+let teams = JSON.parse(localStorage.getItem("semifinal_winners"));
+
+if(!teams || teams.length !== 2){
+alert("Complete Semifinals first!");
+window.location.href="semifinals.html";
+}
+
+const finalDiv=document.getElementById("finalMatch");
+
+finalDiv.innerHTML=`
+<div class="teams">
+<div class="team">${teams[0].name}</div>
+<div class="team">${teams[1].name}</div>
+</div>
+<button class="predictBtn" onclick="predictFinal()">
+Simulate Final (10,000 runs)
+</button>
+`;
+
+/* -------- MONTE CARLO FINAL -------- */
+
+function predictFinal(){
+
+const team1=teams[0];
+const team2=teams[1];
+
+const SIM=10000;
+let t1Wins=0, t2Wins=0;
+
+for(let s=0;s<SIM;s++){
+const total=team1.perf+team2.perf;
+const prob=team1.perf/total;
+if(Math.random()<prob) t1Wins++;
+else t2Wins++;
+}
+
+const t1Prob=(t1Wins/SIM)*100;
+const t2Prob=(t2Wins/SIM)*100;
+
+const winner = t1Prob>t2Prob ? team1 : team2;
+
+localStorage.setItem("champion", JSON.stringify(winner));
+
+let t=5;
+const countdown=document.getElementById("countdown");
+const championDiv=document.getElementById("champion");
+const trophy=document.getElementById("trophy");
+
+countdown.textContent="5";
+
+const timer=setInterval(()=>{
+t--;
+countdown.textContent=t;
+
+if(t<=0){
+clearInterval(timer);
+countdown.textContent="";
+
+championDiv.innerHTML=`
+🔥 ${winner.name} WINS THE WORLD CUP! 🔥<br><br>
+${team1.name}: ${t1Prob.toFixed(2)}%<br>
+${team2.name}: ${t2Prob.toFixed(2)}%
+`;
+
+trophy.textContent="🏆";
+startMassiveConfetti();
+}
+
+},1000);
+}
+
+/* -------- MASSIVE CONFETTI -------- */
+
+let anim, active=false;
+
+function startMassiveConfetti(){
+const canvas=document.getElementById("confetti");
+const ctx=canvas.getContext("2d");
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
+active=true;
+
+let pieces=[];
+for(let i=0;i<600;i++){
+pieces.push({
+x:Math.random()*canvas.width,
+y:Math.random()*canvas.height-canvas.height,
+size:Math.random()*8+4,
+speed:Math.random()*5+2,
+color:`hsl(${Math.random()*360},100%,50%)`
+});
+}
+
+function draw(){
+if(!active)return;
+ctx.clearRect(0,0,canvas.width,canvas.height);
+pieces.forEach(p=>{
+ctx.fillStyle=p.color;
+ctx.fillRect(p.x,p.y,p.size,p.size);
+p.y+=p.speed;
+});
+anim=requestAnimationFrame(draw);
+}
+draw();
+}
+
+/* -------- RESET -------- */
+
+function resetTournament(){
+localStorage.clear();
+window.location.href="index.html";
+}
+
+</script>
+
+</body>
+</html>

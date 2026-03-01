@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Quarterfinals - FIFA 2026</title>
+
+<style>
+body{
+margin:0;
+font-family:system-ui;
+background:linear-gradient(180deg,#070b14,#0b1220);
+color:white;
+}
+
+.container{
+max-width:1200px;
+margin:auto;
+padding:40px 20px;
+}
+
+h1{text-align:center;margin-bottom:30px;}
+
+.match{
+background:rgba(18,28,51,.85);
+padding:20px;
+border-radius:15px;
+border:1px solid rgba(255,255,255,.1);
+margin-bottom:25px;
+}
+
+.teams{
+display:flex;
+gap:15px;
+}
+
+.teamBtn{
+flex:1;
+padding:12px;
+border-radius:10px;
+border:1px solid rgba(255,255,255,.2);
+background:rgba(255,255,255,.05);
+color:white;
+font-weight:bold;
+cursor:pointer;
+}
+
+.teamBtn:disabled{
+opacity:.5;
+cursor:not-allowed;
+}
+
+.predictBtn{
+margin-top:15px;
+padding:8px 14px;
+background:#f6c453;
+border:none;
+border-radius:8px;
+cursor:pointer;
+font-weight:bold;
+}
+
+.simAllBtn{
+margin-bottom:30px;
+padding:10px 20px;
+background:#28a745;
+border:none;
+border-radius:10px;
+color:white;
+font-weight:bold;
+cursor:pointer;
+}
+
+.backBtn, .nextBtn{
+position:fixed;
+bottom:30px;
+width:60px;
+height:60px;
+border-radius:50%;
+border:none;
+background:linear-gradient(135deg,#f6c453,#d4a017);
+color:#000;
+font-size:26px;
+font-weight:bold;
+cursor:pointer;
+}
+
+.backBtn{ left:30px; }
+.nextBtn{ right:30px; }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h1>🏆 Quarterfinals</h1>
+
+<button class="simAllBtn" onclick="simulateAll()">Simulate All Matches</button>
+
+<div id="matches"></div>
+</div>
+
+<button class="backBtn" onclick="window.location.href='round16.html'">←</button>
+<button class="nextBtn" onclick="goNext()">➜</button>
+
+<script>
+
+/* -------- LOAD ROUND 16 WINNERS -------- */
+
+let teams = JSON.parse(localStorage.getItem("round16_winners"));
+
+if(!teams || teams.length !== 8){
+alert("Complete Round of 16 first!");
+window.location.href="round16.html";
+}
+
+/* -------- VARIABLES -------- */
+
+let qfWinners = new Array(4).fill(null);
+const container=document.getElementById("matches");
+
+/* -------- GENERATE MATCHES -------- */
+
+for(let i=0;i<8;i+=2){
+
+const team1=teams[i];
+const team2=teams[i+1];
+
+const div=document.createElement("div");
+div.className="match";
+
+div.innerHTML=`
+<div class="teams">
+<button class="teamBtn">${team1.name}</button>
+<button class="teamBtn">${team2.name}</button>
+</div>
+
+<button class="predictBtn" onclick="predict(${i})">
+Run 10,000 Simulations
+</button>
+`;
+
+container.appendChild(div);
+}
+
+/* -------- MONTE CARLO -------- */
+
+function predict(i){
+
+const team1=teams[i];
+const team2=teams[i+1];
+
+const SIM=10000;
+let t1Wins=0, t2Wins=0;
+
+for(let s=0;s<SIM;s++){
+const total=team1.perf+team2.perf;
+const prob=team1.perf/total;
+if(Math.random()<prob) t1Wins++;
+else t2Wins++;
+}
+
+const winner = t1Wins>t2Wins ? team1 : team2;
+
+/* SAVE PROPERLY */
+qfWinners[i/2]=winner;
+localStorage.setItem("quarterfinal_winners", JSON.stringify(qfWinners));
+
+alert(`${winner.name} advances to Semifinals!`);
+}
+
+/* -------- SIMULATE ALL -------- */
+
+function simulateAll(){
+for(let i=0;i<8;i+=2){
+predict(i);
+}
+alert("All Quarterfinal matches simulated!");
+}
+
+/* -------- NEXT -------- */
+
+function goNext(){
+const saved=JSON.parse(localStorage.getItem("quarterfinal_winners"))||[];
+
+if(saved.filter(Boolean).length !== 4){
+alert("Complete all 4 matches first!");
+return;
+}
+
+window.location.href="semifinals.html";
+}
+
+</script>
+
+</body>
+</html>
