@@ -185,14 +185,26 @@ document.addEventListener('DOMContentLoaded',initGlobalSong);
 /* -------- LOAD SEMIFINAL WINNERS -------- */
 
 document.addEventListener('DOMContentLoaded',()=>{
-  let teams = JSON.parse(localStorage.getItem("semifinal_winners"));
+  console.log('Final page loading...');
+  const stored = localStorage.getItem("semifinal_winners");
+  console.log('Stored semifinal_winners:', stored);
+  
+  let teams = stored ? JSON.parse(stored) : null;
 
-  if(!teams || teams.length !== 2){
+  if(!teams || !Array.isArray(teams) || teams.length !== 2){
+    console.error('No valid semifinal winners found, redirecting...');
     alert("Complete Semifinals first!");
     window.location.href="Semifinals.html";
+    return;
   }
 
+  console.log('Teams loaded:', teams);
   const finalDiv=document.getElementById("finalMatch");
+  
+  if(!finalDiv){
+    console.error('finalMatch div not found!');
+    return;
+  }
 
   finalDiv.innerHTML=`
   <div class="teams">
@@ -205,6 +217,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   `;
 
   window.finalTeams = teams;
+  console.log('Final page ready with teams:', window.finalTeams);
 });
 
 /* -------- MONTE CARLO FINAL -------- */
