@@ -184,31 +184,35 @@ document.addEventListener('DOMContentLoaded',initGlobalSong);
 
 /* -------- LOAD SEMIFINAL WINNERS -------- */
 
-let teams = JSON.parse(localStorage.getItem("semifinal_winners"));
+document.addEventListener('DOMContentLoaded',()=>{
+  let teams = JSON.parse(localStorage.getItem("semifinal_winners"));
 
-if(!teams || teams.length !== 2){
-alert("Complete Semifinals first!");
-window.location.href="semifinals.html";
-}
+  if(!teams || teams.length !== 2){
+    alert("Complete Semifinals first!");
+    window.location.href="Semifinals.html";
+  }
 
-const finalDiv=document.getElementById("finalMatch");
+  const finalDiv=document.getElementById("finalMatch");
 
-finalDiv.innerHTML=`
-<div class="teams">
-<div class="team">${teams[0].name}</div>
-<div class="team">${teams[1].name}</div>
-</div>
-<button class="predictBtn" onclick="predictFinal()">
-Simulate Final (10,000 runs)
-</button>
-`;
+  finalDiv.innerHTML=`
+  <div class="teams">
+  <div class="team">${teams[0].name}</div>
+  <div class="team">${teams[1].name}</div>
+  </div>
+  <button class="predictBtn" onclick="predictFinal()">
+  Simulate Final (10,000 runs)
+  </button>
+  `;
+
+  window.finalTeams = teams;
+});
 
 /* -------- MONTE CARLO FINAL -------- */
 
 function predictFinal(){
 
-const team1=teams[0];
-const team2=teams[1];
+const team1=window.finalTeams[0];
+const team2=window.finalTeams[1];
 
 const SIM=10000;
 let t1Wins=0, t2Wins=0;
