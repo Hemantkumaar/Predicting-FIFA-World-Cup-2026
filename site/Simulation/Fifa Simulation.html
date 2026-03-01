@@ -24,6 +24,26 @@ overflow-x:hidden;
 
 .container{max-width:1150px;margin:auto;padding:20px}
 
+#simAllGroupsBtn{
+  position:fixed;
+  top:30px;
+  left:30px;
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  border:none;
+  background:linear-gradient(135deg,#f6c453,#d4a017);
+  color:#000;
+  font-size:20px;
+  cursor:pointer;
+  box-shadow:0 0 15px rgba(246,196,83,.7);
+  z-index:10001;
+}
+#simAllGroupsBtn:hover{
+  transform:translateY(-3px);
+  box-shadow:0 0 15px rgba(246,196,83,1);
+}
+
 .groupCard{
 margin-top:25px;
 background:rgba(18,28,51,.85);
@@ -179,6 +199,9 @@ z-index:10000;
 
 <div class="container">
 <h1>FIFA World Cup 2026 Prediction</h1>
+<button id="simAllGroupsBtn" title="Simulate all groups" onclick="simulateAllGroups()">
+  ▶︎
+</button>
 <div id="groupsWrap"></div>
 </div>
 
@@ -401,6 +424,18 @@ div.innerHTML=`<b>${team.flag} ${team.name}</b> - ${team.perf}%<div class="bar">
 content.appendChild(div);
 });
 startConfetti();
+}
+
+function simulateAllGroups(){
+  let idx=0;
+  const delay=6000;
+  function next(){
+    if(idx>=GROUPS.length) return;
+    predict(GROUPS[idx].code);
+    idx++;
+    setTimeout(next, delay);
+  }
+  next();
 }
 },1000);
 }
