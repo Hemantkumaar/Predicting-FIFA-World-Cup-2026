@@ -244,7 +244,7 @@ function initGlobalSong(){
     sessionStorage.setItem('audioTime',song.currentTime);
     localStorage.setItem('songTime',song.currentTime);
     updateProgress();
-  },500);
+  },300);
   
   song.addEventListener('play',()=>{
     sessionStorage.setItem('audioPlaying','true');
@@ -263,13 +263,22 @@ function initGlobalSong(){
   if(btn) btn.textContent=wasPlaying?'⏸':'▶';
   
   if(wasPlaying){
-    song.play().then(()=>{
-      console.log('✓ Auto-resumed');\n      if(btn) btn.textContent='⏸';
-    }).catch(err=>{
-      console.log('⚠ Autoplay blocked, waiting for click...');
-      if(btn) btn.textContent='▶';
-    });
+    setTimeout(()=>{
+      song.play().then(()=>{
+        console.log('✓ Auto-resumed');
+        if(btn) btn.textContent='⏸';
+      }).catch(err=>{
+        console.log('⚠ Autoplay blocked, waiting for click...');
+        if(btn) btn.textContent='▶';
+      });
+    },200);
   }
+  
+  window.addEventListener('beforeunload',()=>{
+    sessionStorage.setItem('audioTime',song.currentTime);
+    sessionStorage.setItem('audioPlaying',!song.paused?'true':'false');
+    console.log('💾 Saved audio state before navigation');
+  });
 }
 
 function togglePlayPause(){
