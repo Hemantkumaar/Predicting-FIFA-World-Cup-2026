@@ -231,14 +231,35 @@ function togglePlayPause(){
 
 document.addEventListener('DOMContentLoaded',initGlobalSong);/* -------- LOAD SF WINNERS -------- */
 // load quarterfinal winners from storage
+// load or auto‑generate semifinalists
 let teams = JSON.parse(localStorage.getItem("quarterfinal_winners"));
 
 if(!teams || teams.length !== 4){
-  const container = document.getElementById("matches");
-  if(container){
-    container.innerHTML = '<p style="color:#f6c453;font-size:18px;">Please complete the Quarterfinals first to unlock Semifinals.</p>';
+  console.warn('quarterfinal_winners missing (site copy), attempting auto‑generate');
+  const prev = JSON.parse(localStorage.getItem("round16_winners"));
+  if(prev && prev.length === 8){
+    teams = [];
+    for(let i=0;i<8;i+=2){
+      const t1 = prev[i], t2 = prev[i+1];
+      const prob = t1.perf / (t1.perf + t2.perf);
+      teams.push(Math.random() < prob ? t1 : t2);
+    }
+    localStorage.setItem("quarterfinal_winners", JSON.stringify(teams));
+    console.log('Auto-generated quarterfinal_winners from round16 data (site copy)');
+  } else {
+    teams = [
+      {name:"🇧🇷 Brazil",perf:79.4},
+      {name:"🇫🇷 France",perf:76},
+      {name:"🇪🇸 Spain",perf:73.8},
+      {name:"🇦🇷 Argentina",perf:77.6}
+    ];
+    localStorage.setItem("quarterfinal_winners", JSON.stringify(teams));
+    const container = document.getElementById("matches");
+    if(container){
+      container.innerHTML = '<p style="color:#f6c453;font-size:18px;">Using default teams for Semifinals (no prior data).</p>';
+    }
+    console.warn('Injected default semifinal teams (site copy)');
   }
-  console.warn('Semifinals unavailable: quarterfinal_winners missing or invalid', teams);
 }
 
 /* -------- VARIABLES -------- */

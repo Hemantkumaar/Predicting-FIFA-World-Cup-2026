@@ -237,18 +237,43 @@ function togglePlayPause(){
 
 document.addEventListener('DOMContentLoaded',initGlobalSong);/* -------- LOAD QF WINNERS -------- */
 
+// try to load round‑of‑16 winners; if they're missing we'll fall back
 let teams = JSON.parse(localStorage.getItem("round16_winners"));
 
 if(!teams || teams.length !== 8){
-  // If there are no winners from Round of 16 yet, inform the user instead
-  const container = document.getElementById("matches");
-  if(container){
-    container.innerHTML = '<p style="color:#f6c453;font-size:18px;">Please complete the Round of 16 first to unlock Quarterfinals.</p>';
+  console.warn('round16_winners key missing/invalid, attempting to auto‑generate');
+
+  // if we have round32 results we can simulate the missing round16 automatically
+  const prev = JSON.parse(localStorage.getItem("round32_winners"));
+  if(prev && prev.length === 16){
+    // simple probabilistic simulation using performances
+    teams = [];
+    for(let i=0;i<16;i+=2){
+      const t1 = prev[i], t2 = prev[i+1];
+      const prob = t1.perf / (t1.perf + t2.perf);
+      teams.push(Math.random() < prob ? t1 : t2);
+    }
+    localStorage.setItem("round16_winners", JSON.stringify(teams));
+    console.log('Automatically generated round16_winners from round32 data');
+  } else {
+    // no previous data at all – create a set of placeholder teams so the page isn't empty
+    teams = [
+      {name:"🇧🇷 Brazil",perf:79.4},
+      {name:"🇫🇷 France",perf:76},
+      {name:"🇪🇸 Spain",perf:73.8},
+      {name:"🇦🇷 Argentina",perf:77.6},
+      {name:"🇩🇪 Germany",perf:74},
+      {name:"🏴 England",perf:74.7},
+      {name:"🇵🇹 Portugal",perf:72.4},
+      {name:"🇲🇽 Mexico",perf:72.5}
+    ];
+    localStorage.setItem("round16_winners", JSON.stringify(teams));
+    const container = document.getElementById("matches");
+    if(container){
+      container.innerHTML = '<p style="color:#f6c453;font-size:18px;">Using default seed teams (no prior data found).</p>';
+    }
+    console.warn('Injected default teams for quarterfinal display');
   }
-  console.warn('Quarterfinals unavailable: round16_winners missing or invalid', teams);
-  // leave the page in place so user sees message; they can navigate back manually
-  // optionally redirect after a delay if desired:
-  // setTimeout(()=>window.location.href="roundof16.html",2000);
 }
 
 /* -------- VARIABLES -------- */

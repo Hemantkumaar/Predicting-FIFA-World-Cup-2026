@@ -261,14 +261,33 @@ function togglePlayPause(){
 
 document.addEventListener('DOMContentLoaded',initGlobalSong);/* -------- LOAD SF WINNERS -------- */
 
+// load or auto‑generate final teams
 let teams = JSON.parse(localStorage.getItem("semifinal_winners"));
 
 if(!teams || teams.length !== 2){
-  const finalDiv = document.getElementById("finalMatch");
-  if(finalDiv){
-    finalDiv.innerHTML = '<p style="color:#f6c453;font-size:18px;">Please complete the Semifinals first to unlock the Final.</p>';
+  console.warn('semifinal_winners missing (site copy), attempting auto‑generate');
+  const prev = JSON.parse(localStorage.getItem("quarterfinal_winners"));
+  if(prev && prev.length === 4){
+    teams = [];
+    for(let i=0;i<4;i+=2){
+      const t1 = prev[i], t2 = prev[i+1];
+      const prob = t1.perf / (t1.perf + t2.perf);
+      teams.push(Math.random() < prob ? t1 : t2);
+    }
+    localStorage.setItem("semifinal_winners", JSON.stringify(teams));
+    console.log('Auto-generated semifinal_winners from quarterfinal data (site copy)');
+  } else {
+    teams = [
+      {name:"🇧🇷 Brazil",perf:79.4},
+      {name:"🇫🇷 France",perf:76}
+    ];
+    localStorage.setItem("semifinal_winners", JSON.stringify(teams));
+    const finalDiv = document.getElementById("finalMatch");
+    if(finalDiv){
+      finalDiv.innerHTML = '<p style="color:#f6c453;font-size:18px;">Using default finalists (no prior data).</p>';
+    }
+    console.warn('Injected default final teams (site copy)');
   }
-  console.warn('Final unavailable: semifinal_winners missing or invalid', teams);
 }
 
 console.log('Teams loaded:', teams);
