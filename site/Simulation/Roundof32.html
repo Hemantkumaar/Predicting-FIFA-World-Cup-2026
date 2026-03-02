@@ -199,10 +199,6 @@ function togglePlayPause(){
   if(song.paused) audioState.play();
   else audioState.pause();
 }
-  const song=document.getElementById('globalSong');
-  if(song.paused) song.play().catch(err=>console.warn('Play failed:',err.message));
-  else song.pause();
-}
 
 document.addEventListener('DOMContentLoaded',initGlobalSong);/* -------- 32 TEAMS (STATIC FOR STABILITY) -------- */
 
