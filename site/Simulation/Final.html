@@ -112,7 +112,11 @@ cursor:pointer;
 
 <canvas id="confetti"></canvas>
 
-<!-- persistent soundtrack for tournament flow; local file -->
+<!-- persistent soundtrack for tournament flow -->
+<audio id="globalSong" src="champion.mp3" preload="auto"></audio>
+
+<!-- champion song: add a file named 'champion.mp3' alongside this HTML or adjust path.
+	Suggested track: "Waka Waka (This Time for Africa)" by Shakira. -->
 <audio id="globalSong" src="champion.mp3" preload="auto"></audio>
 
 <!-- Global Audio Player UI -->
@@ -136,35 +140,102 @@ cursor:pointer;
 
 <script>
 
+/* -------- GLOBAL SOUNDTRACK CONTROLS -------- */
+// Use localStorage exclusively - survives navigation
+const audioState = {
+  play() {
+    const s = document.getElementById('globalSong');
+    if(s) {
+      s.play().then(() => {
+        this.saveState();
+      }).catch(e => console.log('⚠ Play blocked'));
+    }
+  },
+  pause() {
+    const s = document.getElementById('globalSong');
+    if(s) {
+      s.pause();
+      this.saveState();
+    }
+  },
+  saveState() {
+    const s = document.getElementById('globalSong');
+    if(s) {
+      localStorage.setItem('__audio_time', String(s.currentTime));
+      localStorage.setItem('__audio_playing', !s.paused);
+    }
+  },
+  loadState() {
+    const s = document.getElementById('globalSong');
+    if(!s) return;
+    const t = parseFloat(localStorage.getItem('__audio_time') || 0);
+    const p = localStorage.getItem('__audio_playing') === 'true';
+    if(t > 0) s.currentTime = t;
+    if(p) this.play();
+  }
+};
+
 function initGlobalSong(){
-  const song=document.getElementById('globalSong');
-  const btn=document.getElementById('playPauseBtn');
+  const song = document.getElementById('globalSong');
+  const btn = document.getElementById('playPauseBtn');
   if(!song) return;
-  song.volume=1;
-  const t=parseFloat(sessionStorage.getItem('audioTime')||localStorage.getItem('songTime')||0);
-  const wasPlaying=sessionStorage.getItem('audioPlaying')==='true'||localStorage.getItem('songPlaying')==='true';
-  if(!isNaN(t) && t>0) song.currentTime=t;
-  console.log('🎵 Final: time='+t.toFixed(1)+'s, wasPlaying='+wasPlaying);
-  const updateProgress=()=>{
-    const bar=document.getElementById('progressBar');
-    if(bar && song.duration) bar.style.width=((song.currentTime/song.duration)*100)+'%';
-  };
+  
+  song.volume = 1;
+  audioState.loadState();
+  
+  // Save every 50ms for perfect continuity
+  setInterval(() => {
+    localStorage.setItem('__audio_time', String(song.currentTime));
+    localStorage.setItem('__audio_playing', !song.paused);
+    
+    const bar = document.getElementById('progressBar');
+    if(bar && song.duration) {
+      bar.style.width = ((song.currentTime / song.duration) * 100) + '%';
+    }
+  }, 50);
+  
+  song.addEventListener('play', () => {
+    localStorage.setItem('__audio_playing', 'true');
+    if(btn) btn.textContent = '⏸';
+  });
+  
+  song.addEventListener('pause', () => {
+    localStorage.setItem('__audio_playing', 'false');
+    if(btn) btn.textContent = '▶';
+  });
+  
+  if(btn) {
+    btn.textContent = localStorage.getItem('__audio_playing') === 'true' ? '⏸' : '▶';
+  }
+  
+  // Save on page hide
+  window.addEventListener('pagehide', () => {
+    localStorage.setItem('__audio_time', String(song.currentTime));
+    localStorage.setItem('__audio_playing', !song.paused);
+    console.log('💾 Saved');
+  });
+};
+  
   setInterval(()=>{
     sessionStorage.setItem('audioTime',song.currentTime);
     localStorage.setItem('songTime',song.currentTime);
     updateProgress();
   },100);
+  
   song.addEventListener('play',()=>{
     sessionStorage.setItem('audioPlaying','true');
     localStorage.setItem('songPlaying','true');
     if(btn) btn.textContent='⏸';
   });
+  
   song.addEventListener('pause',()=>{
     sessionStorage.setItem('audioPlaying','false');
     localStorage.setItem('songPlaying','false');
     if(btn) btn.textContent='▶';
   });
+  
   if(btn) btn.textContent=wasPlaying?'⏸':'▶';
+  
   const audioUnlocked=sessionStorage.getItem('audioUnlocked')==='true';
   if(wasPlaying || audioUnlocked){
     song.play().then(()=>{
@@ -179,33 +250,14 @@ function initGlobalSong(){
   window.addEventListener('pagehide',()=>{
     sessionStorage.setItem('audioTime',song.currentTime);
     sessionStorage.setItem('audioPlaying','true');
-    console.log('💾 Saved audio state before navigation');
+    console.log('💾 Saved on pagehide');
   });
 }
 function togglePlayPause(){
-  const song=document.getElementById('globalSong');
-  if(song.paused) song.play().catch(err=>console.warn('Play failed:',err.message));
-  else song.pause();
+  const song = document.getElementById('globalSong');
+  if(song.paused) audioState.play();
+  else audioState.pause();
 }
-document.addEventListener('DOMContentLoaded',initGlobalSong);
-
-/* -------- LOAD SEMIFINAL WINNERS -------- */
-
-document.addEventListener('DOMContentLoaded',()=>{
-  console.log('Final page loading...');
-  const stored = localStorage.getItem("semifinal_winners");
-  console.log('Stored semifinal_winners:', stored);
-  
-  let teams = stored ? JSON.parse(stored) : null;
-
-  // FALLBACK: Use test data if no semifinal winners found
-  if(!teams || !Array.isArray(teams) || teams.length !== 2){
-    console.warn('No semifinal winners found, using test data...');
-    teams = [
-      { name: "Brazil", perf: 85 },
-      { name: "France", perf: 82 }
-    ];
-  }
 
   console.log('Teams loaded:', teams);
   const finalDiv=document.getElementById("finalMatch");
@@ -251,6 +303,16 @@ const t2Prob=(t2Wins/SIM)*100;
 
 const winner = t1Prob>t2Prob ? team1 : team2;
 
+	// attempt to unlock audio playback early (some browsers require a
+	// user gesture). we start & immediately pause the track here so that
+	// later `song.play()` during the reveal is more likely to succeed.
+	const earlySong = document.getElementById("championSong");
+	if(earlySong){
+		earlySong.play().then(()=>earlySong.pause()).catch(()=>{
+			// ignore errors; if autoplay is blocked we'll try again later
+		});
+	}
+
 localStorage.setItem("champion", JSON.stringify(winner));
 
 let t=5;
@@ -264,15 +326,9 @@ const timer=setInterval(()=>{
 t--;
 countdown.textContent=t;
 
-if(t<=0){
+	if(t<=0){
 clearInterval(timer);
 countdown.textContent="";
-
-    // unlock audio with initial gesture
-    const earlySong = document.getElementById("championSong");
-    if(earlySong){
-        earlySong.play().then(()=>earlySong.pause()).catch(()=>{});
-    }
 
 championDiv.innerHTML=`
 🔥 ${winner.name} WINS THE WORLD CUP! 🔥<br><br>
@@ -280,11 +336,15 @@ ${team1.name}: ${t1Prob.toFixed(2)}%<br>
 ${team2.name}: ${t2Prob.toFixed(2)}%
 `;
 
+		// show trophy and celebrate
 		trophy.textContent="🏆";
+		// play the champion song if available
 		const song = document.getElementById("championSong");
 		if(song){
 			song.currentTime = 0;
-			song.play().catch(()=>{});
+			song.play().catch(err=>{
+				console.warn("Could not play champion song:", err);
+			});
 		}
 		startFireworks();
 }
@@ -314,10 +374,8 @@ function startFireworks(){
 			const speed = Math.random()*4+1;
 			particles.push({
 				x,y,
-			song.currentTime = 0;
-			song.play().catch(err=>{
-				console.warn("Could not play champion song:", err);
-			});
+				vx:Math.cos(angle)*speed,
+				vy:Math.sin(angle)*speed,
 				life:60 + Math.random()*30,
 				color:`hsl(${Math.random()*360},100%,50%)`
 			});
@@ -353,7 +411,9 @@ function stopFireworks(){
 /* -------- RESET -------- */
 
 function resetTournament(){
+	// wipe all stored results and return to the simulation start page
 	localStorage.clear();
+	// the first page of the flow is the main FIFA Simulation screen
 	window.location.href="Fifa Simulation.html";
 }
 

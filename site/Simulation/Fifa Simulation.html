@@ -197,8 +197,8 @@ z-index:10000;
 
 <canvas id="confetti"></canvas>
 
-<!-- persistent soundtrack for entire flow; local Waka Waka file -->
-<audio id="globalSong" src="champion.mp3" preload="auto"></audio>
+<!-- global soundtrack for entire flow; using local Waka Waka file -->
+<audio id="globalSong" src="champion.mp3" preload="auto" crossorigin="anonymous"></audio>
 
 <!-- Global Audio Player UI -->
 <div style="position:fixed;bottom:20px;right:20px;z-index:9999;background:rgba(0,0,0,.95);padding:10px 12px;border-radius:8px;border:2px solid #f6c453;display:flex;align-items:center;gap:8px;font-size:11px;box-shadow:0 4px 20px rgba(0,0,0,.8);font-family:system-ui;">
@@ -227,66 +227,87 @@ z-index:10000;
 <script>
 
 /* -------- GLOBAL SOUNDTRACK CONTROLS -------- */
+// Use localStorage exclusively - survives navigation
+const audioState = {
+  play() {
+    const s = document.getElementById('globalSong');
+    if(s) {
+      s.play().then(() => {
+        this.saveState();
+        console.log('▶ Playing');
+      }).catch(e => console.log('⚠ Play blocked'));
+    }
+  },
+  pause() {
+    const s = document.getElementById('globalSong');
+    if(s) {
+      s.pause();
+      this.saveState();
+      console.log('⏸ Paused');
+    }
+  },
+  saveState() {
+    const s = document.getElementById('globalSong');
+    if(s) {
+      localStorage.setItem('__audio_time', String(s.currentTime));
+      localStorage.setItem('__audio_playing', !s.paused);
+    }
+  },
+  loadState() {
+    const s = document.getElementById('globalSong');
+    if(!s) return;
+    const t = parseFloat(localStorage.getItem('__audio_time') || 0);
+    const p = localStorage.getItem('__audio_playing') === 'true';
+    if(t > 0) s.currentTime = t;
+    if(p) this.play();
+  }
+};
+
 function initGlobalSong(){
-  const song=document.getElementById('globalSong');
-  const btn=document.getElementById('playPauseBtn');
+  const song = document.getElementById('globalSong');
+  const btn = document.getElementById('playPauseBtn');
   if(!song) return;
-  song.volume=1;
-  const t=parseFloat(sessionStorage.getItem('audioTime')||localStorage.getItem('songTime')||0);
-  const wasPlaying=sessionStorage.getItem('audioPlaying')==='true'||localStorage.getItem('songPlaying')==='true';
-  if(!isNaN(t) && t>0) song.currentTime=t;
-  console.log('🎵 Fifa Sim: restored time='+t.toFixed(1)+'s, wasPlaying='+wasPlaying);
   
-  const updateProgress=()=>{
-    const bar=document.getElementById('progressBar');
-    if(bar && song.duration) bar.style.width=((song.currentTime/song.duration)*100)+'%';
-  };
+  song.volume = 1;
+  audioState.loadState();
   
-  setInterval(()=>{
-    sessionStorage.setItem('audioTime',song.currentTime);
-    localStorage.setItem('songTime',song.currentTime);
-    updateProgress();
-  },100);
+  // Save every 50ms for perfect continuity
+  setInterval(() => {
+    localStorage.setItem('__audio_time', String(song.currentTime));
+    localStorage.setItem('__audio_playing', !song.paused);
+    
+    const bar = document.getElementById('progressBar');
+    if(bar && song.duration) {
+      bar.style.width = ((song.currentTime / song.duration) * 100) + '%';
+    }
+  }, 50);
   
-  song.addEventListener('play',()=>{
-    sessionStorage.setItem('audioPlaying','true');
-    localStorage.setItem('songPlaying','true');
-    if(btn) btn.textContent='⏸';
-    console.log('▶ Audio playing');
+  song.addEventListener('play', () => {
+    localStorage.setItem('__audio_playing', 'true');
+    if(btn) btn.textContent = '⏸';
   });
   
-  song.addEventListener('pause',()=>{
-    sessionStorage.setItem('audioPlaying','false');
-    localStorage.setItem('songPlaying','false');
-    if(btn) btn.textContent='▶';
-    console.log('⏸ Audio paused');
+  song.addEventListener('pause', () => {
+    localStorage.setItem('__audio_playing', 'false');
+    if(btn) btn.textContent = '▶';
   });
   
-  if(btn) btn.textContent=wasPlaying?'⏸':'▶';
-  
-  if(wasPlaying){
-    setTimeout(()=>{
-      song.play().then(()=>{
-        console.log('✓ Auto-resumed');
-        if(btn) btn.textContent='⏸';
-      }).catch(err=>{
-        console.log('⚠ Autoplay blocked, waiting for click...');
-        if(btn) btn.textContent='▶';
-      });
-    },200);
+  if(btn) {
+    btn.textContent = localStorage.getItem('__audio_playing') === 'true' ? '⏸' : '▶';
   }
   
-  window.addEventListener('pagehide',()=>{
-    sessionStorage.setItem('audioTime',song.currentTime);
-    sessionStorage.setItem('audioPlaying','true');
-    console.log('💾 Saved on pagehide');
+  // Save on page hide
+  window.addEventListener('pagehide', () => {
+    localStorage.setItem('__audio_time', String(song.currentTime));
+    localStorage.setItem('__audio_playing', !song.paused);
+    console.log('💾 Saved state');
   });
 }
 
 function togglePlayPause(){
-  const song=document.getElementById('globalSong');
-  if(song.paused) song.play().catch(err=>console.warn('Play failed:',err.message));
-  else song.pause();
+  const song = document.getElementById('globalSong');
+  if(song.paused) audioState.play();
+  else audioState.pause();
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
@@ -309,9 +330,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     document.body.addEventListener('touchstart',enableAudio,{once:true});
     
     setTimeout(()=>render(),100);
-});
-
-/* -------- CONFETTI CONTROL -------- */
+});/* ---------------- CONFETTI CONTROL ---------------- */
 let confettiAnimation;
 let confettiActive = false;
 
@@ -521,9 +540,12 @@ content.appendChild(div);
 startConfetti();
 }
 
+/* -------- SIMULATE ALL GROUPS -------- */
+
 function simulateAllGroups(){
+  // run prediction modal for each group sequentially so user can see them
   let idx=0;
-  const delay=6000;
+  const delay=6000; // milliseconds (5s countdown + small buffer)
   function next(){
     if(idx>=GROUPS.length) return;
     predict(GROUPS[idx].code);
@@ -544,7 +566,7 @@ render();
 </script>
 
 <!-- NEXT PAGE BUTTON -->
-<!-- when clicked, navigate to Roundof32.html -->
+<!-- when clicked, go to the round-of-32 simulation page -->
 <button id="nextBtn" onclick="window.location.href='Roundof32.html'">
   ➜
 </button>

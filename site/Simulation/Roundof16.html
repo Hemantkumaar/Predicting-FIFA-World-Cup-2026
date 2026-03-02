@@ -92,7 +92,7 @@ cursor:pointer;
 
 <body>
 
-<!-- persistent soundtrack for tournament flow; local file -->
+<!-- persistent soundtrack for tournament flow -->
 <audio id="globalSong" src="champion.mp3" preload="auto"></audio>
 
 <!-- Global Audio Player UI -->
@@ -115,55 +115,89 @@ cursor:pointer;
 
 <script>
 
-function initGlobalSong(){
-    const song=document.getElementById('globalSong');
-    const btn=document.getElementById('playPauseBtn');
-    if(!song) return;
-    song.volume=1;
-    const t=parseFloat(sessionStorage.getItem('audioTime')||localStorage.getItem('songTime')||0);
-    const wasPlaying=sessionStorage.getItem('audioPlaying')==='true'||localStorage.getItem('songPlaying')==='true';
-    if(!isNaN(t) && t>0) song.currentTime=t;
-    console.log('🎵 Roundof16: time='+t.toFixed(1)+'s, wasPlaying='+wasPlaying);
-    
-    setInterval(()=>{
-        sessionStorage.setItem('audioTime',song.currentTime);
-        localStorage.setItem('songTime',song.currentTime);
-        const bar=document.getElementById('progressBar');
-        if(bar && song.duration) bar.style.width=((song.currentTime/song.duration)*100)+'%';
-    },100);
-    
-    song.addEventListener('play',()=>{
-        sessionStorage.setItem('audioPlaying','true');
-        localStorage.setItem('songPlaying','true');
-        if(btn) btn.textContent='⏸';
-    });
-    
-    song.addEventListener('pause',()=>{
-        sessionStorage.setItem('audioPlaying','false');
-        localStorage.setItem('songPlaying','false');
-        if(btn) btn.textContent='▶';
-    });
-    
-    const audioUnlocked=sessionStorage.getItem('audioUnlocked')==='true';
-    if(wasPlaying || audioUnlocked){
-        song.play().then(()=>{
-            console.log('✓ Audio resumed on Roundof16');
-            if(btn) btn.textContent='⏸';
-        }).catch(err=>{
-            console.log('⚠ Autoplay blocked, click play button');
-            if(btn) btn.textContent='▶';
-        });
+/* -------- GLOBAL SOUNDTRACK CONTROLS -------- */
+// Use localStorage exclusively - survives navigation
+const audioState = {
+  play() {
+    const s = document.getElementById('globalSong');
+    if(s) {
+      s.play().then(() => {
+        this.saveState();
+      }).catch(e => console.log('⚠ Play blocked'));
     }
-    
-    window.addEventListener('pagehide',()=>{
-        sessionStorage.setItem('audioTime',song.currentTime);
-        sessionStorage.setItem('audioPlaying',!song.paused?'true':'false');
-        console.log('💾 Saved audio state before navigation');
-    });
-}
-document.addEventListener('DOMContentLoaded',initGlobalSong);
+  },
+  pause() {
+    const s = document.getElementById('globalSong');
+    if(s) {
+      s.pause();
+      this.saveState();
+    }
+  },
+  saveState() {
+    const s = document.getElementById('globalSong');
+    if(s) {
+      localStorage.setItem('__audio_time', String(s.currentTime));
+      localStorage.setItem('__audio_playing', !s.paused);
+    }
+  },
+  loadState() {
+    const s = document.getElementById('globalSong');
+    if(!s) return;
+    const t = parseFloat(localStorage.getItem('__audio_time') || 0);
+    const p = localStorage.getItem('__audio_playing') === 'true';
+    if(t > 0) s.currentTime = t;
+    if(p) this.play();
+  }
+};
 
-/* -------- LOAD ROUND 32 WINNERS -------- */
+function initGlobalSong(){
+  const song = document.getElementById('globalSong');
+  const btn = document.getElementById('playPauseBtn');
+  if(!song) return;
+  
+  song.volume = 1;
+  audioState.loadState();
+  
+  // Save every 50ms for perfect continuity
+  setInterval(() => {
+    localStorage.setItem('__audio_time', String(song.currentTime));
+    localStorage.setItem('__audio_playing', !song.paused);
+    
+    const bar = document.getElementById('progressBar');
+    if(bar && song.duration) {
+      bar.style.width = ((song.currentTime / song.duration) * 100) + '%';
+    }
+  }, 50);
+  
+  song.addEventListener('play', () => {
+    localStorage.setItem('__audio_playing', 'true');
+    if(btn) btn.textContent = '⏸';
+  });
+  
+  song.addEventListener('pause', () => {
+    localStorage.setItem('__audio_playing', 'false');
+    if(btn) btn.textContent = '▶';
+  });
+  
+  if(btn) {
+    btn.textContent = localStorage.getItem('__audio_playing') === 'true' ? '⏸' : '▶';
+  }
+  
+  // Save on page hide
+  window.addEventListener('pagehide', () => {
+    localStorage.setItem('__audio_time', String(song.currentTime));
+    localStorage.setItem('__audio_playing', !song.paused);
+    console.log('💾 Saved');
+  });
+}
+
+function togglePlayPause(){
+  const song = document.getElementById('globalSong');
+  if(song.paused) audioState.play();
+  else audioState.pause();
+}
+
+document.addEventListener('DOMContentLoaded',initGlobalSong);/* -------- LOAD ROUND 32 WINNERS -------- */
 
 let teams = JSON.parse(localStorage.getItem("round32_winners"));
 
