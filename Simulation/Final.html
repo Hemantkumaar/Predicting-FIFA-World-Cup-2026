@@ -259,14 +259,22 @@ function togglePlayPause(){
   else audioState.pause();
 }
 
-  console.log('Teams loaded:', teams);
-  const finalDiv=document.getElementById("finalMatch");
-  
-  if(!finalDiv){
-    console.error('finalMatch div not found!');
-    return;
-  }
+document.addEventListener('DOMContentLoaded',initGlobalSong);/* -------- LOAD SF WINNERS -------- */
 
+let teams = JSON.parse(localStorage.getItem("semifinal_winners"));
+
+if(!teams || teams.length !== 2){
+  alert("Complete Semifinals first!");
+  window.location.href="semifinals.html";
+}
+
+console.log('Teams loaded:', teams);
+const finalDiv=document.getElementById("finalMatch");
+
+if(!finalDiv){
+  console.error('finalMatch div not found!');
+}
+else{
   finalDiv.innerHTML=`
   <div class="teams">
   <div class="team">${teams[0].name}</div>
@@ -276,11 +284,10 @@ function togglePlayPause(){
   Simulate Final (10,000 runs)
   </button>
   `;
+}
 
-  window.finalTeams = teams;
-  console.log('Final page ready with teams:', window.finalTeams);
-});
-
+window.finalTeams = teams;
+console.log('Final page ready with teams:', window.finalTeams);
 /* -------- MONTE CARLO FINAL -------- */
 
 function predictFinal(){
