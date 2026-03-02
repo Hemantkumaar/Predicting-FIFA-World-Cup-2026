@@ -289,12 +289,23 @@ function togglePlayPause(){
 
 document.addEventListener('DOMContentLoaded',()=>{
     initGlobalSong();
+    
+    // Unlock audio autoplay with first user interaction
     const enableAudio=()=>{
         const s=document.getElementById('globalSong');
-        if(s && s.paused) s.play().catch(()=>{});
+        if(s){
+            s.play().then(()=>{
+                sessionStorage.setItem('audioUnlocked','true');
+                sessionStorage.setItem('audioPlaying','true');
+                console.log('🔓 Audio autoplay unlocked! Will continue across all pages');
+            }).catch(()=>{
+                console.log('⚠ Play failed on first interaction');
+            });
+        }
     };
     document.body.addEventListener('click',enableAudio,{once:true});
     document.body.addEventListener('touchstart',enableAudio,{once:true});
+    
     setTimeout(()=>render(),100);
 });/* ---------------- CONFETTI CONTROL ---------------- */
 let confettiAnimation;

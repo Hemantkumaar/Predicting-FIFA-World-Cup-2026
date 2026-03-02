@@ -147,9 +147,8 @@ function initGlobalSong(){
         if(btn) btn.textContent='▶';
     });
     
-    if(btn) btn.textContent=wasPlaying?'⏸':'▶';
-    
-    if(wasPlaying){
+    const audioUnlocked=sessionStorage.getItem('audioUnlocked')==='true';
+    if(wasPlaying || audioUnlocked){
         setTimeout(()=>{
             song.play().then(()=>{
                 console.log('✓ Audio resumed on Roundof32');
@@ -158,7 +157,7 @@ function initGlobalSong(){
                 console.log('⚠ Autoplay blocked, click play button');
                 if(btn) btn.textContent='▶';
             });
-        },200);
+        },100);
     }
     
     window.addEventListener('beforeunload',()=>{
