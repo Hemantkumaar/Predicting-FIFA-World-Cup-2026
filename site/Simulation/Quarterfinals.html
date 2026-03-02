@@ -237,12 +237,18 @@ function togglePlayPause(){
 
 document.addEventListener('DOMContentLoaded',initGlobalSong);/* -------- LOAD QF WINNERS -------- */
 
+// helper to parse JSON stored in localStorage safely
+function _safeLoad(key){
+  try{ return JSON.parse(localStorage.getItem(key)); }
+  catch(_) { return null; }
+}
+
 // load or auto‑generate teams for quarterfinals
-let teams = JSON.parse(localStorage.getItem("round16_winners"));
+let teams = _safeLoad("round16_winners");
 
 if(!teams || teams.length !== 8){
   console.warn('round16_winners key missing/invalid in site copy');
-  const prev = JSON.parse(localStorage.getItem("round32_winners"));
+  const prev = _safeLoad("round32_winners");
   if(prev && prev.length === 16){
     teams = [];
     for(let i=0;i<16;i+=2){

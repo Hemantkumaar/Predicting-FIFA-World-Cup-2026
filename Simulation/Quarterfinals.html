@@ -237,14 +237,23 @@ function togglePlayPause(){
 
 document.addEventListener('DOMContentLoaded',initGlobalSong);/* -------- LOAD QF WINNERS -------- */
 
+// helper to parse JSON stored in localStorage without throwing
+function _safeLoad(key){
+  try{
+    return JSON.parse(localStorage.getItem(key));
+  }catch(_){
+    return null;
+  }
+}
+
 // try to load round‑of‑16 winners; if they're missing we'll fall back
-let teams = JSON.parse(localStorage.getItem("round16_winners"));
+let teams = _safeLoad("round16_winners");
 
 if(!teams || teams.length !== 8){
   console.warn('round16_winners key missing/invalid, attempting to auto‑generate');
 
   // if we have round32 results we can simulate the missing round16 automatically
-  const prev = JSON.parse(localStorage.getItem("round32_winners"));
+  const prev = _safeLoad("round32_winners");
   if(prev && prev.length === 16){
     // simple probabilistic simulation using performances
     teams = [];
