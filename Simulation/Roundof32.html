@@ -160,15 +160,13 @@ function initGlobalSong(){
   // Auto-play if it was playing before
   const audioUnlocked=sessionStorage.getItem('audioUnlocked')==='true';
   if(wasPlaying || audioUnlocked){
-    setTimeout(()=>{
-      song.play().then(()=>{
-        console.log('✓ Audio resumed on Roundof32');
-        if(btn) btn.textContent='⏸';
-      }).catch(err=>{
-        console.log('⚠ Autoplay blocked, click play button');
-        if(btn) btn.textContent='▶';
-      });
-    },100);
+    song.play().then(()=>{
+      console.log('✓ Audio resumed on Roundof32');
+      if(btn) btn.textContent='⏸';
+    }).catch(err=>{
+      console.log('⚠ Autoplay blocked, click play button');
+      if(btn) btn.textContent='▶';
+    });
   }
   
   // Save state before leaving page

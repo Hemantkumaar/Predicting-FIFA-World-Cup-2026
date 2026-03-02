@@ -276,7 +276,7 @@ function initGlobalSong(){
   
   window.addEventListener('beforeunload',()=>{
     sessionStorage.setItem('audioTime',song.currentTime);
-    sessionStorage.setItem('audioPlaying',!song.paused?'true':'false');
+    sessionStorage.setItem('audioPlaying','true');
     console.log('💾 Saved audio state before navigation');
   });
 }

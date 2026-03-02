@@ -146,15 +146,13 @@ function initGlobalSong(){
     
     const audioUnlocked=sessionStorage.getItem('audioUnlocked')==='true';
     if(wasPlaying || audioUnlocked){
-        setTimeout(()=>{
-            song.play().then(()=>{
-                console.log('✓ Audio resumed on Quarterfinals');
-                if(btn) btn.textContent='⏸';
-            }).catch(err=>{
-                console.log('⚠ Autoplay blocked, click play button');
-                if(btn) btn.textContent='▶';
-            });
-        },100);
+        song.play().then(()=>{
+            console.log('✓ Audio resumed on Quarterfinals');
+            if(btn) btn.textContent='⏸';
+        }).catch(err=>{
+            console.log('⚠ Autoplay blocked, click play button');
+            if(btn) btn.textContent='▶';
+        });
     }
     
     window.addEventListener('beforeunload',()=>{
