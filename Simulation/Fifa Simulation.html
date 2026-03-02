@@ -198,14 +198,16 @@ z-index:10000;
 <canvas id="confetti"></canvas>
 
 <!-- global soundtrack for entire flow; using local Waka Waka file -->
-<audio id="globalSong" src="champion.mp3" preload="auto"></audio>
+<audio id="globalSong" src="champion.mp3" preload="auto" crossorigin="anonymous"></audio>
 
 <!-- Global Audio Player UI -->
 <div style="position:fixed;bottom:20px;right:20px;z-index:9999;background:rgba(0,0,0,.95);padding:10px 12px;border-radius:8px;border:2px solid #f6c453;display:flex;align-items:center;gap:8px;font-size:11px;box-shadow:0 4px 20px rgba(0,0,0,.8);font-family:system-ui;">
   <button id="playPauseBtn" style="background:#f6c453;color:#000;border:none;padding:5px 8px;border-radius:4px;cursor:pointer;font-weight:bold;font-size:12px;line-height:1;" onclick="togglePlayPause()">▶</button>
   <span style="color:#a9b4d0;font-size:10px;">🎵 Waka Waka</span>
   <div style="width:80px;height:2px;background:rgba(255,255,255,.2);border-radius:1px;overflow:hidden;"><div id="progressBar" style="height:100%;background:#f6c453;width:0%;"></div></div>
-</div>\n\n<div class="container">
+</div>
+
+<div class="container">
 <h1>FIFA World Cup 2026 Prediction</h1>
 <button id="simAllGroupsBtn" title="Simulate all groups" onclick="simulateAllGroups()">
   ▶︎
@@ -244,7 +246,7 @@ function initGlobalSong(){
     sessionStorage.setItem('audioTime',song.currentTime);
     localStorage.setItem('songTime',song.currentTime);
     updateProgress();
-  },300);
+  },100);
   
   song.addEventListener('play',()=>{
     sessionStorage.setItem('audioPlaying','true');
@@ -263,21 +265,19 @@ function initGlobalSong(){
   if(btn) btn.textContent=wasPlaying?'⏸':'▶';
   
   if(wasPlaying){
-    setTimeout(()=>{
-      song.play().then(()=>{
-        console.log('✓ Auto-resumed');
-        if(btn) btn.textContent='⏸';
-      }).catch(err=>{
-        console.log('⚠ Autoplay blocked, waiting for click...');
-        if(btn) btn.textContent='▶';
-      });
-    },200);
+    song.play().then(()=>{
+      console.log('✓ Auto-resumed');
+      if(btn) btn.textContent='⏸';
+    }).catch(err=>{
+      console.log('⚠ Autoplay blocked');
+      if(btn) btn.textContent='▶';
+    });
   }
   
-  window.addEventListener('beforeunload',()=>{
+  window.addEventListener('pagehide',()=>{
     sessionStorage.setItem('audioTime',song.currentTime);
     sessionStorage.setItem('audioPlaying','true');
-    console.log('💾 Saved audio state before navigation');
+    console.log('💾 Saved on pagehide');
   });
 }
 

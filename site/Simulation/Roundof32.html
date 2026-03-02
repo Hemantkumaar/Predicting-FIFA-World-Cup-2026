@@ -133,7 +133,7 @@ function initGlobalSong(){
         localStorage.setItem('songTime',song.currentTime);
         const bar=document.getElementById('progressBar');
         if(bar && song.duration) bar.style.width=((song.currentTime/song.duration)*100)+'%';
-    },300);
+    },100);
     
     song.addEventListener('play',()=>{
         sessionStorage.setItem('audioPlaying','true');
@@ -158,7 +158,7 @@ function initGlobalSong(){
         });
     }
     
-    window.addEventListener('beforeunload',()=>{
+    window.addEventListener('pagehide',()=>{
         sessionStorage.setItem('audioTime',song.currentTime);
         sessionStorage.setItem('audioPlaying',!song.paused?'true':'false');
         console.log('💾 Saved audio state before navigation');

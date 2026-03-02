@@ -162,7 +162,7 @@ function initGlobalSong(){
     sessionStorage.setItem('audioTime',song.currentTime);
     localStorage.setItem('songTime',song.currentTime);
     updateProgress();
-  },300);
+  },100);
   
   song.addEventListener('play',()=>{
     sessionStorage.setItem('audioPlaying','true');
@@ -189,10 +189,10 @@ function initGlobalSong(){
     });
   }
   
-  window.addEventListener('beforeunload',()=>{
+  window.addEventListener('pagehide',()=>{
     sessionStorage.setItem('audioTime',song.currentTime);
-    sessionStorage.setItem('audioPlaying',!song.paused?'true':'false');
-    console.log('💾 Saved audio state before navigation');
+    sessionStorage.setItem('audioPlaying','true');
+    console.log('💾 Saved on pagehide');
   });
 }
 function togglePlayPause(){
