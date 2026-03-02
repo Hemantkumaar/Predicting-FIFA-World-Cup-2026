@@ -118,66 +118,87 @@ cursor:pointer;
 
 <script>
 
-/* -------- GLOBAL SOUNDTRACK CONTROLS (same as other pages) -------- */
+/* -------- GLOBAL SOUNDTRACK CONTROLS -------- */
+// Use localStorage exclusively - survives navigation
+const audioState = {
+  play() {
+    const s = document.getElementById('globalSong');
+    if(s) {
+      s.play().then(() => {
+        this.saveState();
+      }).catch(e => console.log('⚠ Play blocked'));
+    }
+  },
+  pause() {
+    const s = document.getElementById('globalSong');
+    if(s) {
+      s.pause();
+      this.saveState();
+    }
+  },
+  saveState() {
+    const s = document.getElementById('globalSong');
+    if(s) {
+      localStorage.setItem('__audio_time', String(s.currentTime));
+      localStorage.setItem('__audio_playing', !s.paused);
+    }
+  },
+  loadState() {
+    const s = document.getElementById('globalSong');
+    if(!s) return;
+    const t = parseFloat(localStorage.getItem('__audio_time') || 0);
+    const p = localStorage.getItem('__audio_playing') === 'true';
+    if(t > 0) s.currentTime = t;
+    if(p) this.play();
+  }
+};
+
 function initGlobalSong(){
-  const song=document.getElementById('globalSong');
-  const btn=document.getElementById('playPauseBtn');
+  const song = document.getElementById('globalSong');
+  const btn = document.getElementById('playPauseBtn');
   if(!song) return;
-  song.volume=1;
   
-  // Force restore from sessionStorage first, then localStorage
-  const t=parseFloat(sessionStorage.getItem('audioTime')||localStorage.getItem('songTime')||0);
-  const wasPlaying=sessionStorage.getItem('audioPlaying')==='true'||localStorage.getItem('songPlaying')==='true';
+  song.volume = 1;
+  audioState.loadState();
   
-  if(!isNaN(t) && t>0) song.currentTime=t;
-  console.log('🎵 Roundof32: time='+t.toFixed(1)+'s, wasPlaying='+wasPlaying);
+  // Save every 50ms for perfect continuity
+  setInterval(() => {
+    localStorage.setItem('__audio_time', String(song.currentTime));
+    localStorage.setItem('__audio_playing', !song.paused);
+    
+    const bar = document.getElementById('progressBar');
+    if(bar && song.duration) {
+      bar.style.width = ((song.currentTime / song.duration) * 100) + '%';
+    }
+  }, 50);
   
-  const updateProgress=()=>{
-    const bar=document.getElementById('progressBar');
-    if(bar && song.duration) bar.style.width=((song.currentTime/song.duration)*100)+'%';
-  };
-  
-  setInterval(()=>{
-    sessionStorage.setItem('audioTime',song.currentTime);
-    localStorage.setItem('songTime',song.currentTime);
-    updateProgress();
-  },100);
-  
-  song.addEventListener('play',()=>{
-    sessionStorage.setItem('audioPlaying','true');
-    localStorage.setItem('songPlaying','true');
-    if(btn) btn.textContent='⏸';
+  song.addEventListener('play', () => {
+    localStorage.setItem('__audio_playing', 'true');
+    if(btn) btn.textContent = '⏸';
   });
   
-  song.addEventListener('pause',()=>{
-    sessionStorage.setItem('audioPlaying','false');
-    localStorage.setItem('songPlaying','false');
-    if(btn) btn.textContent='▶';
+  song.addEventListener('pause', () => {
+    localStorage.setItem('__audio_playing', 'false');
+    if(btn) btn.textContent = '▶';
   });
   
-  if(btn) btn.textContent=wasPlaying?'⏸':'▶';
-  
-  // Auto-play if it was playing before
-  const audioUnlocked=sessionStorage.getItem('audioUnlocked')==='true';
-  if(wasPlaying || audioUnlocked){
-    song.play().then(()=>{
-      console.log('✓ Audio resumed on Roundof32');
-      if(btn) btn.textContent='⏸';
-    }).catch(err=>{
-      console.log('⚠ Autoplay blocked, click play button');
-      if(btn) btn.textContent='▶';
-    });
+  if(btn) {
+    btn.textContent = localStorage.getItem('__audio_playing') === 'true' ? '⏸' : '▶';
   }
   
-  // Save state before leaving page
-  window.addEventListener('pagehide',()=>{
-    sessionStorage.setItem('audioTime',song.currentTime);
-    sessionStorage.setItem('audioPlaying','true');
-    console.log('💾 Saved on pagehide');
+  // Save on page hide
+  window.addEventListener('pagehide', () => {
+    localStorage.setItem('__audio_time', String(song.currentTime));
+    localStorage.setItem('__audio_playing', !song.paused);
+    console.log('💾 Saved');
   });
 }
 
 function togglePlayPause(){
+  const song = document.getElementById('globalSong');
+  if(song.paused) audioState.play();
+  else audioState.pause();
+}
   const song=document.getElementById('globalSong');
   if(song.paused) song.play().catch(err=>console.warn('Play failed:',err.message));
   else song.pause();

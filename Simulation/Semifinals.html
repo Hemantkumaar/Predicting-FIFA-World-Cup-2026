@@ -110,22 +110,80 @@ cursor:pointer;
 <script>
 
 /* -------- GLOBAL SOUNDTRACK CONTROLS -------- */
+// Use localStorage exclusively - survives navigation
+const audioState = {
+  play() {
+    const s = document.getElementById('globalSong');
+    if(s) {
+      s.play().then(() => {
+        this.saveState();
+      }).catch(e => console.log('⚠ Play blocked'));
+    }
+  },
+  pause() {
+    const s = document.getElementById('globalSong');
+    if(s) {
+      s.pause();
+      this.saveState();
+    }
+  },
+  saveState() {
+    const s = document.getElementById('globalSong');
+    if(s) {
+      localStorage.setItem('__audio_time', String(s.currentTime));
+      localStorage.setItem('__audio_playing', !s.paused);
+    }
+  },
+  loadState() {
+    const s = document.getElementById('globalSong');
+    if(!s) return;
+    const t = parseFloat(localStorage.getItem('__audio_time') || 0);
+    const p = localStorage.getItem('__audio_playing') === 'true';
+    if(t > 0) s.currentTime = t;
+    if(p) this.play();
+  }
+};
+
 function initGlobalSong(){
-  const song=document.getElementById('globalSong');
-  const btn=document.getElementById('playPauseBtn');
+  const song = document.getElementById('globalSong');
+  const btn = document.getElementById('playPauseBtn');
   if(!song) return;
-  song.volume=1;
   
-  const t=parseFloat(sessionStorage.getItem('audioTime')||localStorage.getItem('songTime')||0);
-  const wasPlaying=sessionStorage.getItem('audioPlaying')==='true'||localStorage.getItem('songPlaying')==='true';
+  song.volume = 1;
+  audioState.loadState();
   
-  if(!isNaN(t) && t>0) song.currentTime=t;
-  console.log('🎵 Semifinals: time='+t.toFixed(1)+'s, wasPlaying='+wasPlaying);
+  // Save every 50ms for perfect continuity
+  setInterval(() => {
+    localStorage.setItem('__audio_time', String(song.currentTime));
+    localStorage.setItem('__audio_playing', !song.paused);
+    
+    const bar = document.getElementById('progressBar');
+    if(bar && song.duration) {
+      bar.style.width = ((song.currentTime / song.duration) * 100) + '%';
+    }
+  }, 50);
   
-  const updateProgress=()=>{
-    const bar=document.getElementById('progressBar');
-    if(bar && song.duration) bar.style.width=((song.currentTime/song.duration)*100)+'%';
-  };
+  song.addEventListener('play', () => {
+    localStorage.setItem('__audio_playing', 'true');
+    if(btn) btn.textContent = '⏸';
+  });
+  
+  song.addEventListener('pause', () => {
+    localStorage.setItem('__audio_playing', 'false');
+    if(btn) btn.textContent = '▶';
+  });
+  
+  if(btn) {
+    btn.textContent = localStorage.getItem('__audio_playing') === 'true' ? '⏸' : '▶';
+  }
+  
+  // Save on page hide
+  window.addEventListener('pagehide', () => {
+    localStorage.setItem('__audio_time', String(song.currentTime));
+    localStorage.setItem('__audio_playing', !song.paused);
+    console.log('💾 Saved');
+  });
+};
   
   setInterval(()=>{
     sessionStorage.setItem('audioTime',song.currentTime);
@@ -166,38 +224,10 @@ function initGlobalSong(){
 }
 
 function togglePlayPause(){
-  const song=document.getElementById('globalSong');
-  if(song.paused) song.play().catch(err=>console.warn('Play failed:',err.message));
-  else song.pause();
-}
-
-document.addEventListener('DOMContentLoaded',initGlobalSong);/* -------- LOAD QUARTERFINAL WINNERS -------- */
-
-let teams = JSON.parse(localStorage.getItem("quarterfinal_winners"));
-
-if(!teams || teams.length !== 4){
-alert("Complete Quarterfinals first!");
-window.location.href="quarterfinals.html";
-}
-
-/* -------- VARIABLES -------- */
-
-let sfWinners = new Array(2).fill(null);
-const container=document.getElementById("matches");
-
-/* -------- GENERATE MATCHES -------- */
-
-for(let i=0;i<4;i+=2){
-
-const team1=teams[i];
-const team2=teams[i+1];
-
-const div=document.createElement("div");
-div.className="match";
-
-div.innerHTML=`
-<div class="teams">
-<button class="teamBtn">${team1.name}</button>
+  const song = document.getElementById('globalSong');
+  if(song.paused) audioState.play();
+  else audioState.pause();
+}</button>
 <button class="teamBtn">${team2.name}</button>
 </div>
 

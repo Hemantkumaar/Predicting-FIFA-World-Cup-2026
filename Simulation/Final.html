@@ -141,22 +141,80 @@ cursor:pointer;
 <script>
 
 /* -------- GLOBAL SOUNDTRACK CONTROLS -------- */
+// Use localStorage exclusively - survives navigation
+const audioState = {
+  play() {
+    const s = document.getElementById('globalSong');
+    if(s) {
+      s.play().then(() => {
+        this.saveState();
+      }).catch(e => console.log('⚠ Play blocked'));
+    }
+  },
+  pause() {
+    const s = document.getElementById('globalSong');
+    if(s) {
+      s.pause();
+      this.saveState();
+    }
+  },
+  saveState() {
+    const s = document.getElementById('globalSong');
+    if(s) {
+      localStorage.setItem('__audio_time', String(s.currentTime));
+      localStorage.setItem('__audio_playing', !s.paused);
+    }
+  },
+  loadState() {
+    const s = document.getElementById('globalSong');
+    if(!s) return;
+    const t = parseFloat(localStorage.getItem('__audio_time') || 0);
+    const p = localStorage.getItem('__audio_playing') === 'true';
+    if(t > 0) s.currentTime = t;
+    if(p) this.play();
+  }
+};
+
 function initGlobalSong(){
-  const song=document.getElementById('globalSong');
-  const btn=document.getElementById('playPauseBtn');
+  const song = document.getElementById('globalSong');
+  const btn = document.getElementById('playPauseBtn');
   if(!song) return;
-  song.volume=1;
   
-  const t=parseFloat(sessionStorage.getItem('audioTime')||localStorage.getItem('songTime')||0);
-  const wasPlaying=sessionStorage.getItem('audioPlaying')==='true'||localStorage.getItem('songPlaying')==='true';
+  song.volume = 1;
+  audioState.loadState();
   
-  if(!isNaN(t) && t>0) song.currentTime=t;
-  console.log('🎵 Final: time='+t.toFixed(1)+'s, wasPlaying='+wasPlaying);
+  // Save every 50ms for perfect continuity
+  setInterval(() => {
+    localStorage.setItem('__audio_time', String(song.currentTime));
+    localStorage.setItem('__audio_playing', !song.paused);
+    
+    const bar = document.getElementById('progressBar');
+    if(bar && song.duration) {
+      bar.style.width = ((song.currentTime / song.duration) * 100) + '%';
+    }
+  }, 50);
   
-  const updateProgress=()=>{
-    const bar=document.getElementById('progressBar');
-    if(bar && song.duration) bar.style.width=((song.currentTime/song.duration)*100)+'%';
-  };
+  song.addEventListener('play', () => {
+    localStorage.setItem('__audio_playing', 'true');
+    if(btn) btn.textContent = '⏸';
+  });
+  
+  song.addEventListener('pause', () => {
+    localStorage.setItem('__audio_playing', 'false');
+    if(btn) btn.textContent = '▶';
+  });
+  
+  if(btn) {
+    btn.textContent = localStorage.getItem('__audio_playing') === 'true' ? '⏸' : '▶';
+  }
+  
+  // Save on page hide
+  window.addEventListener('pagehide', () => {
+    localStorage.setItem('__audio_time', String(song.currentTime));
+    localStorage.setItem('__audio_playing', !song.paused);
+    console.log('💾 Saved');
+  });
+};
   
   setInterval(()=>{
     sessionStorage.setItem('audioTime',song.currentTime);
@@ -196,29 +254,10 @@ function initGlobalSong(){
   });
 }
 function togglePlayPause(){
-  const song=document.getElementById('globalSong');
-  if(song.paused) song.play().catch(err=>console.warn('Play failed:',err.message));
-  else song.pause();
+  const song = document.getElementById('globalSong');
+  if(song.paused) audioState.play();
+  else audioState.pause();
 }
-document.addEventListener('DOMContentLoaded',initGlobalSong);
-
-/* -------- LOAD SEMIFINAL WINNERS -------- */
-
-document.addEventListener('DOMContentLoaded',()=>{
-  console.log('Final page loading...');
-  const stored = localStorage.getItem("semifinal_winners");
-  console.log('Stored semifinal_winners:', stored);
-  
-  let teams = stored ? JSON.parse(stored) : null;
-
-  // FALLBACK: Use test data if no semifinal winners found
-  if(!teams || !Array.isArray(teams) || teams.length !== 2){
-    console.warn('No semifinal winners found, using test data...');
-    teams = [
-      { name: "Brazil", perf: 85 },
-      { name: "France", perf: 82 }
-    ];
-  }
 
   console.log('Teams loaded:', teams);
   const finalDiv=document.getElementById("finalMatch");
