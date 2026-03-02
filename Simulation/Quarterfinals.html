@@ -240,8 +240,15 @@ document.addEventListener('DOMContentLoaded',initGlobalSong);/* -------- LOAD QF
 let teams = JSON.parse(localStorage.getItem("round16_winners"));
 
 if(!teams || teams.length !== 8){
-  alert("Complete Round of 16 first!");
-  window.location.href="roundof16.html";
+  // If there are no winners from Round of 16 yet, inform the user instead
+  const container = document.getElementById("matches");
+  if(container){
+    container.innerHTML = '<p style="color:#f6c453;font-size:18px;">Please complete the Round of 16 first to unlock Quarterfinals.</p>';
+  }
+  console.warn('Quarterfinals unavailable: round16_winners missing or invalid', teams);
+  // leave the page in place so user sees message; they can navigate back manually
+  // optionally redirect after a delay if desired:
+  // setTimeout(()=>window.location.href="roundof16.html",2000);
 }
 
 /* -------- VARIABLES -------- */

@@ -234,8 +234,11 @@ document.addEventListener('DOMContentLoaded',initGlobalSong);/* -------- LOAD SF
 let teams = JSON.parse(localStorage.getItem("quarterfinal_winners"));
 
 if(!teams || teams.length !== 4){
-  alert("Complete Quarterfinals first!");
-  window.location.href="quarterfinals.html";
+  const container = document.getElementById("matches");
+  if(container){
+    container.innerHTML = '<p style="color:#f6c453;font-size:18px;">Please complete the Quarterfinals first to unlock Semifinals.</p>';
+  }
+  console.warn('Semifinals unavailable: quarterfinal_winners missing or invalid', teams);
 }
 
 /* -------- VARIABLES -------- */

@@ -264,8 +264,11 @@ document.addEventListener('DOMContentLoaded',initGlobalSong);/* -------- LOAD SF
 let teams = JSON.parse(localStorage.getItem("semifinal_winners"));
 
 if(!teams || teams.length !== 2){
-  alert("Complete Semifinals first!");
-  window.location.href="semifinals.html";
+  const finalDiv = document.getElementById("finalMatch");
+  if(finalDiv){
+    finalDiv.innerHTML = '<p style="color:#f6c453;font-size:18px;">Please complete the Semifinals first to unlock the Final.</p>';
+  }
+  console.warn('Final unavailable: semifinal_winners missing or invalid', teams);
 }
 
 console.log('Teams loaded:', teams);
