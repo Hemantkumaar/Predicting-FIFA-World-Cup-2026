@@ -163,6 +163,11 @@ Jordan:70,
 "IC Path 1 winner":74
 };
 
+// Helper function to safely get team strength
+function getTeamStrength(team) {
+  return teamsStrength[team] || 70; // Default to 70 if team not found
+}
+
 // group definitions used for voting
 const groups = {
   A:["Mexico","South Africa","South Korea","UEFA Path D winner"],
@@ -213,7 +218,8 @@ function showStats(group, votedTeam){
   let groupDiv = document.getElementById("group-" + group);
   let html = `<h2>Group ${group}</h2>`;
   groups[group].forEach(team => {
-    let performance = Math.round((teamsStrength[team] / 94) * 100);
+    let strength = getTeamStrength(team);
+    let performance = Math.round((strength / 94) * 100);
     let isQualified = false;
     let groupTeams = [...groups[group]];
     let ranked = groupTeams.sort((a,b)=>teamsStrength[b]-teamsStrength[a]);
@@ -366,7 +372,8 @@ function showStats(group, votedTeam){
   let groupDiv = document.getElementById("group-" + group);
   let html = `<h2>Group ${group}</h2>`;
   groups[group].forEach(team => {
-    let performance = Math.round((teamsStrength[team] / 94) * 100);
+    let strength = getTeamStrength(team);
+    let performance = Math.round((strength / 94) * 100);
     let isQualified = false;
     let groupTeams = [...groups[group]];
     let ranked = groupTeams.sort((a,b)=>teamsStrength[b]-teamsStrength[a]);
