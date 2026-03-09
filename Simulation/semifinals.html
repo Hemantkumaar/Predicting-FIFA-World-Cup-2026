@@ -212,10 +212,10 @@ function getQualifiedTeams(){
 }
 
 function showSemifinals(){
-	let qualified = getQualifiedTeams()
+	// Hardcoded semifinal matchups as requested
 	matchups = [
-		{home: qualified[0], away: qualified[1]},
-		{home: qualified[2], away: qualified[3]}
+		{home: "Brazil", away: "Norway"},
+		{home: "Argentina", away: "Spain"}
 	]
 	let container = document.getElementById("semifinals")
 	container.innerHTML = ""

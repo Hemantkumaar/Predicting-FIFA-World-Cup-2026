@@ -45,80 +45,9 @@
     }
 
     function getQualifiedTeams() {
-      let stored = JSON.parse(localStorage.getItem("final_match") || "[]");
-      if (Array.isArray(stored) && stored.length === 2) return stored;
-      // replicate full tournament computation as in semifinals.html
-      const groups = {
-          A:["Mexico","South Africa","South Korea","UEFA Path D winner"],
-          B:["Canada","UEFA Path A winner","Qatar","Switzerland"],
-          C:["Brazil","Morocco","Haiti","Scotland"],
-          D:["USA","Paraguay","Australia","UEFA Path C winner"],
-          E:["Germany","Curaçao","Ivory Coast","Ecuador"],
-          F:["Netherlands","Japan","UEFA Path B winner","Tunisia"],
-          G:["Belgium","Egypt","Iran","New Zealand"],
-          H:["Spain","Cape Verde","Saudi Arabia","Uruguay"],
-          I:["France","Senegal","IC Path 2 winner","Norway"],
-          J:["Argentina","Algeria","Austria","Jordan"],
-          K:["Portugal","IC Path 1 winner","Uzbekistan","Colombia"],
-          L:["England","Croatia","Ghana","Panama"]
-        };
-        let qualified_temp = {};
-        let thirdPlaced = [];
-        for (let g in groups) {
-          let ranked = [...groups[g]].sort((a,b)=>teamsStrength[b]-teamsStrength[a]);
-          qualified_temp[g] = {1: ranked[0], 2: ranked[1]};
-          if (ranked[2]) thirdPlaced.push({team: ranked[2], strength: teamsStrength[ranked[2]]});
-        }
-        thirdPlaced.sort((a,b)=>b.strength - a.strength);
-        let top8Third = thirdPlaced.slice(0,8).map(t=>t.team);
-
-        const winners = pairs => pairs.map(m=>teamsStrength[m.home] > teamsStrength[m.away] ? m.home : m.away);
-
-        let ro32Matchups = [
-          {home: qualified_temp.A[1], away: qualified_temp.B[2]},
-          {home: qualified_temp.C[1], away: qualified_temp.D[2]},
-          {home: qualified_temp.E[1], away: qualified_temp.F[2]},
-          {home: qualified_temp.G[1], away: qualified_temp.H[2]},
-          {home: qualified_temp.B[1], away: qualified_temp.A[2]},
-          {home: qualified_temp.D[1], away: qualified_temp.C[2]},
-          {home: qualified_temp.F[1], away: qualified_temp.E[2]},
-          {home: qualified_temp.H[1], away: qualified_temp.G[2]},
-          {home: qualified_temp.I[1], away: qualified_temp.J[2]},
-          {home: qualified_temp.K[1], away: qualified_temp.L[2]},
-          {home: qualified_temp.J[1], away: qualified_temp.I[2]},
-          {home: qualified_temp.L[1], away: qualified_temp.K[2]},
-          {home: top8Third[0], away: top8Third[1]},
-          {home: top8Third[2], away: top8Third[3]},
-          {home: top8Third[4], away: top8Third[5]},
-          {home: top8Third[6], away: top8Third[7]}
-        ];
-        let ro32Winners = winners(ro32Matchups);
-        let ro16Matchups = [
-          {home: ro32Winners[0], away: ro32Winners[1]},
-          {home: ro32Winners[2], away: ro32Winners[3]},
-          {home: ro32Winners[4], away: ro32Winners[5]},
-          {home: ro32Winners[6], away: ro32Winners[7]},
-          {home: ro32Winners[8], away: ro32Winners[9]},
-          {home: ro32Winners[10], away: ro32Winners[11]},
-          {home: ro32Winners[12], away: ro32Winners[13]},
-          {home: ro32Winners[14], away: ro32Winners[15]}
-        ];
-        let ro16Winners = winners(ro16Matchups);
-        let qfMatchups = [
-          {home: ro16Winners[0], away: ro16Winners[1]},
-          {home: ro16Winners[2], away: ro16Winners[3]},
-          {home: ro16Winners[4], away: ro16Winners[5]},
-          {home: ro16Winners[6], away: ro16Winners[7]}
-        ];
-        let qfWinners = winners(qfMatchups);
-        let sfMatchups = [
-          {home: qfWinners[0], away: qfWinners[1]},
-          {home: qfWinners[2], away: qfWinners[3]}
-        ];
-        let sfWinners = winners(sfMatchups);
-        localStorage.setItem("final_match", JSON.stringify(sfWinners));
-        return sfWinners;
-      }
+      // Hardcoded final matchup as requested: Brazil vs Spain
+      return ["Brazil", "Spain"];
+    }
       // end getQualifiedTeams
     function showFinal() {
       let teams = getQualifiedTeams();
@@ -149,7 +78,10 @@
         </div>
       `;
       if (voted) {
-        let winner = teamsStrength[home] > teamsStrength[away] ? home : away;
+        // Special case: Spain wins the final against Brazil
+        let winner = (home === "Brazil" && away === "Spain") ? "Spain" : 
+                    (home === "Spain" && away === "Brazil") ? "Spain" : 
+                    (teamsStrength[home] > teamsStrength[away] ? home : away);
         let status = winner === voted ? "✓ Your Vote Won!" : "Winner";
         html += `<div style="text-align:center; margin-top:40px; color:#4ade80; font-size:24px;">${home} (${hv}) vs ${away} (${av})<br>Your vote: ${voted}<br><br>${winner} - ${status}</div>`;
       }
