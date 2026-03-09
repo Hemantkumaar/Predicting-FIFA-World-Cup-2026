@@ -234,7 +234,10 @@ function showSemifinals(){
 			let votedTeam = localStorage.getItem("vote_matchsf_"+index)
 			let homeStrength = teamsStrength[match.home]
 			let awayStrength = teamsStrength[match.away]
-			let winner = homeStrength > awayStrength ? match.home : match.away
+			// Special case: Spain beats Argentina in semifinals
+			let winner = (match.home === "Argentina" && match.away === "Spain") ? "Spain" : 
+						(match.home === "Spain" && match.away === "Argentina") ? "Spain" : 
+						(homeStrength > awayStrength ? match.home : match.away)
 			let qualifiedText = winner === votedTeam ? "✓ Your Vote Qualified!" : "Qualified to Final"
 			matchDiv.innerHTML += `<div style="color: #4ade80; font-weight: bold; margin: 10px 0;">${match.home} (${homeVotes} votes) vs ${match.away} (${awayVotes} votes)<br>Your vote: ${votedTeam}<br><br><span style="color: #fbbf24; font-size: 16px;">🏆 ${winner} - ${qualifiedText}</span></div>`
 		} else {
