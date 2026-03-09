@@ -4,3 +4,4 @@ Predicting FIFA World Cup 2026 match outcomes using historical football data, SQ
 #Simulation for my project
 https://predicting-fifa-world-cup-2026.vercel.app/
 
+
