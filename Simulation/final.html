@@ -150,7 +150,10 @@
       const away = teams[1];
       const homeStrength = teamsStrength[home];
       const awayStrength = teamsStrength[away];
-      const winner = homeStrength > awayStrength ? home : away;
+      // Special case: Spain wins the final against Brazil
+      const winner = (home === "Brazil" && away === "Spain") ? "Spain" : 
+                    (home === "Spain" && away === "Brazil") ? "Spain" : 
+                    (homeStrength > awayStrength ? home : away);
       const voted = localStorage.getItem('vote_matchfinal');
       const container = document.getElementById('final');
       container.innerHTML = '';
