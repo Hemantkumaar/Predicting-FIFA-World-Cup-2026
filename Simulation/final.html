@@ -45,9 +45,9 @@
     }
 
     function getQualifiedTeams() {
-      // Hardcoded final matchup as requested: Brazil vs Spain
+      // Hardcoded final matchup as requested: Argentina vs Spain
       // Updated: 2026-03-08 to ensure Spain wins
-      return ["Brazil", "Spain"];
+      return ["Argentina", "Spain"];
     }
       // end getQualifiedTeams
     function showFinal() {
@@ -79,9 +79,9 @@
         </div>
       `;
       if (voted) {
-        // Special case: Spain wins the final against Brazil
-        let winner = (home === "Brazil" && away === "Spain") ? "Spain" :
-                    (home === "Spain" && away === "Brazil") ? "Spain" :
+        // Special case: Spain wins the final against Argentina
+        let winner = (home === "Argentina" && away === "Spain") ? "Spain" :
+                    (home === "Spain" && away === "Argentina") ? "Spain" :
                     (teamsStrength[home] > teamsStrength[away] ? home : away);
         console.log("Final result - Home:", home, "Away:", away, "Winner:", winner);
         let status = winner === voted ? "✓ Your Vote Won!" : "Winner";
@@ -152,9 +152,9 @@
       const away = teams[1];
       const homeStrength = teamsStrength[home];
       const awayStrength = teamsStrength[away];
-      // Special case: Spain wins the final against Brazil
-      const winner = (home === "Brazil" && away === "Spain") ? "Spain" : 
-                    (home === "Spain" && away === "Brazil") ? "Spain" : 
+      // Special case: Spain wins the final against Argentina
+      const winner = (home === "Argentina" && away === "Spain") ? "Spain" : 
+                    (home === "Spain" && away === "Argentina") ? "Spain" : 
                     (homeStrength > awayStrength ? home : away);
       console.log("Reveal Champion - Home:", home, "Away:", away, "Winner:", winner);
       const voted = localStorage.getItem('vote_matchfinal');
