@@ -53,4 +53,7 @@ Overall, this project illustrates the power of data-driven decision making in sp
 #Simulation for my project
 https://predicting-fifa-world-cup-2026.vercel.app/
 
+#Presentation link
+https://www.canva.com/design/DAHDh7Iy-H8/9gRT9Pxy6GpB1yVJ0Fripg/edit?utm_content=DAHDh7Iy-H8&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
+
 
