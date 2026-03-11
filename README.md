@@ -51,7 +51,7 @@ While the current framework focuses primarily on historical match performance, f
 Overall, this project illustrates the power of data-driven decision making in sports analytics and demonstrates how machine learning and statistical modeling can be used to analyze complex competitive environments such as international football tournaments.
 
 #Simulation for my project
-https://predicting-fifa-world-cup-2026.vercel.app/
+https://predicting-fifa-world-cup-2026.vercel.app
 
 #Presentation link
 https://www.canva.com/design/DAHDh7Iy-H8/9gRT9Pxy6GpB1yVJ0Fripg/edit?utm_content=DAHDh7Iy-H8&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
